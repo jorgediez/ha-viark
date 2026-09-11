@@ -49,8 +49,8 @@ class ViarkState:
         return self.info.get("PowerMode") in (None, 1)
 
     @property
-    def channel_names(self) -> list[str]:
-        return [c["ServiceName"] for c in self.channels if c.get("ServiceName")]
+    def channel_count(self) -> int:
+        return len(self.channels)
 
 
 class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
@@ -127,6 +127,3 @@ class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
 
         # Fall back to the per-record flag, which some firmwares set instead.
         return next((c for c in channels if c.get("Playing")), None)
-
-    def channel_by_name(self, name: str) -> dict[str, Any] | None:
-        return next((c for c in self._channels if c.get("ServiceName") == name), None)

@@ -22,6 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ViarkConfigEntry
+from .channels import build_labels, format_label, label_width, resolve
 from .const import (
     ATTR_KEY,
     ATTR_REPEAT,
@@ -114,16 +115,29 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
 
     @property
     def source(self) -> str | None:
+        """The current channel, labelled to match an entry in `source_list`."""
         current = self._state.current
-        return current.get("ServiceName") if current else None
+        if not current:
+            return None
+        # A channel playing but absent from the cached list arrives as a stub
+        # with only a ServiceID, which cannot be labelled; report no source
+        # rather than an empty string that matches nothing in source_list.
+        return format_label(current, label_width(len(self._state.channels))) or None
 
     @property
     def source_list(self) -> list[str]:
-        return self._state.channel_names
+        """Channels as ``0049 Channel Name``.
+
+        Numbering is presentation only, but it makes a thousand-entry dropdown
+        usable and separates the duplicate names satellite line-ups contain.
+        """
+        return build_labels(self._state.channels)
 
     @property
     def media_title(self) -> str | None:
-        return self.source
+        """The plain channel name, without the number prefix."""
+        current = self._state.current
+        return current.get("ServiceName") if current else None
 
     @property
     def media_channel(self) -> str | None:
@@ -215,8 +229,13 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
         await self.coordinator.async_request_refresh()
 
     async def async_select_source(self, source: str) -> None:
-        """Tune directly to a channel by name."""
-        target = self.coordinator.channel_by_name(source)
+        """Tune directly to a channel.
+
+        Accepts a label from the dropdown ("0049 Sports HD"), a bare channel
+        name, or a bare channel number, so automations written before the source
+        list gained numbers keep working unchanged.
+        """
+        target = resolve(source, self._state.channels)
         if target is None:
             raise ServiceValidationError(f"Unknown Viark channel: {source}")
 

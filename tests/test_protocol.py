@@ -78,9 +78,9 @@ def test_xml_encoding_expands_array_into_parm_elements():
     client = ViarkClient("192.0.2.1")
     client.use_json = False
     body = client._encode(
-        1000, {"array": [{"TvState": "0", "ProgramId": "00000003930900"}]}
+        1000, {"array": [{"TvState": "0", "ProgramId": "00001234567890"}]}
     ).decode()
-    assert "<parm><TvState>0</TvState><ProgramId>00000003930900</ProgramId></parm>" in body
+    assert "<parm><TvState>0</TvState><ProgramId>00001234567890</ProgramId></parm>" in body
 
 
 # --- login block -----------------------------------------------------------
@@ -195,7 +195,8 @@ def test_request_error_names_known_statuses():
 def test_decode_json_strips_control_prefixes():
     client = ViarkClient("192.0.2.1")
     client.use_json = True
-    body = zlib.compress(json.dumps([{"favGroupNames": ["Favourites"]}]).encode())
+    raw = [{"favGroupNames": ["Favourites"]}]  # the receiver prefixes names with 0x14
+    body = zlib.compress(json.dumps(raw).encode())
     assert client._decode(zlib.decompress(body)) == [{"favGroupNames": ["Favourites"]}]
 
 

@@ -76,6 +76,38 @@ existing entry instead of creating a duplicate.
 * **`remote`** — `remote.send_command` with named keys or raw codes.
 * **Diagnostic sensors** — see below.
 
+### The source list
+
+Channels appear in the dropdown numbered, matching what the receiver shows
+on screen:
+
+```
+0001 News HD
+0002 News 2
+...
+0049 Sports HD
+```
+
+With a thousand-channel line-up that makes the list navigable, and it also
+separates the **duplicate channel names** satellite line-ups routinely contain —
+identical names were previously impossible to tell apart, and only the first was
+reachable. Numbers are zero padded so the list stays in order even if the
+frontend sorts it as text.
+
+This is presentation only: tuning still uses the channel's internal `ServiceID`.
+`select_source` accepts any of three forms, so **existing automations keep
+working unchanged**:
+
+| Input | Example |
+|---|---|
+| A label from the dropdown | `0049 Sports HD` |
+| A bare channel name | `News HD` |
+| A bare channel number | `49` |
+
+A real channel name always wins over a channel number, so a channel actually
+called "2" is still reachable by name. `media_title` stays the plain name
+without the number, and `media_channel` reports the number on its own.
+
 ### Diagnostic entities
 
 The receiver's login reply is a 108-byte block carrying much more identity than
@@ -126,12 +158,13 @@ target:
 data:
   key: epg
 
-# Tune to a channel by name
+# Tune to a channel. A dropdown label ("0049 Sports HD"), a bare name,
+# or a bare channel number all work.
 action: media_player.select_source
 target:
   entity_id: media_player.viark_sat_4k
 data:
-  source: "LA 1"
+  source: "News HD"
 
 # Type a channel number with the digit keys
 action: remote.send_command
@@ -181,7 +214,7 @@ python tools/viark_cli.py discover              # listen on UDP 25860
 python tools/viark_cli.py info                  # receiver state
 python tools/viark_cli.py now                   # current channel
 python tools/viark_cli.py channels --start 0 --end 20
-python tools/viark_cli.py tune "LA 1"           # direct tune by name
+python tools/viark_cli.py tune "News HD"           # direct tune by name
 python tools/viark_cli.py key mute
 python tools/viark_cli.py keys                  # key alias table
 
@@ -199,11 +232,11 @@ pip install pytest pytest-asyncio pytest-timeout
 python -m pytest tests/ -q
 ```
 
-57 tests, no hardware required. They cover framing, compact-JSON encoding, XML
+82 tests, no hardware required. They cover framing, compact-JSON encoding, XML
 encoding, login-block decoding, reply-header layout, status codes, reconnection
-against a stub receiver, the diagnostic entity definitions, and the key table —
-including a guard that key codes documented by only one source are never
-presented as verified.
+against a stub receiver, the diagnostic entity definitions, source-list
+labelling and channel resolution, and the key table — including a guard that key
+codes documented by only one source are never presented as verified.
 
 ## Contributing
 

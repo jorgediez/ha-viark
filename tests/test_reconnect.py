@@ -110,7 +110,7 @@ class StubReceiver:
                 elif request == 15:
                     writer.write(reply(15, [{"ProductName": "VIARK SAT 4K"}]))
                 elif request == 3:
-                    writer.write(reply(3, [{"Data": "00000003930900"}]))
+                    writer.write(reply(3, [{"Data": "00001234567890"}]))
                 else:
                     writer.write(reply(request, None))
                 await writer.drain()
@@ -149,7 +149,7 @@ async def test_non_zero_status_raises(receiver):
     await client.connect()
     try:
         with pytest.raises(ViarkRequestError) as err:
-            await client.switch_channel("00000003930900")
+            await client.switch_channel("00001234567890")
         assert "menu" in str(err.value)
     finally:
         await client.disconnect()
