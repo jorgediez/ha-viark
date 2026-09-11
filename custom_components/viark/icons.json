@@ -1,0 +1,28 @@
+{
+  "entity": {
+    "sensor": {
+      "serial_number": { "default": "mdi:identifier" },
+      "software_version": { "default": "mdi:package-up" },
+      "ip_address": { "default": "mdi:ip-network" },
+      "platform_id": { "default": "mdi:chip" },
+      "channel_count": { "default": "mdi:format-list-numbered" },
+      "receiver_clock": { "default": "mdi:clock-outline" },
+      "data_format": { "default": "mdi:code-json" },
+      "cpu_chip_id": { "default": "mdi:cpu-64-bit" },
+      "flash_id": { "default": "mdi:memory" },
+      "customer_id": { "default": "mdi:account-details" },
+      "model_id": { "default": "mdi:tag-outline" },
+      "software_version_raw": { "default": "mdi:numeric" },
+      "software_sub_version": { "default": "mdi:numeric" },
+      "max_channels": { "default": "mdi:format-list-numbered" },
+      "satip_mode": { "default": "mdi:satellite-uplink" },
+      "client_type": { "default": "mdi:account-network" }
+    },
+    "binary_sensor": {
+      "satellite_menu": { "default": "mdi:satellite-variant" }
+    }
+  },
+  "services": {
+    "send_key": { "service": "mdi:remote" }
+  }
+}

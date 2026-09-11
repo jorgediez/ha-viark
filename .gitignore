@@ -19,6 +19,10 @@ Thumbs.db
 .claude/
 keymap.json
 
+# Local scratch: screenshots, captures, throwaway notes. Never publish these -
+# they routinely contain real channel names and network details.
+tmp/
+
 # Reverse-engineering source documents.
 android-reverse/
 pc-reverse/

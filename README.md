@@ -189,6 +189,33 @@ Named keys: `up` `down` `left` `right` `ok` `menu` `exit` `back` `red` `green`
 
 Run `python tools/viark_cli.py keys` for the table with codes.
 
+## Icons
+
+Entity and service icons ship in `icons.json` and appear as soon as the
+integration loads.
+
+The **brand tile** in *Settings → Devices & Services* is served from
+`custom_components/viark/brand/`. Since Home Assistant **2026.3** an integration
+can carry its own brand images and they override the CDN automatically — no
+configuration, and no pull request to the [brands repository][brands]. On older
+releases the tile falls back to the default placeholder; everything else works
+regardless.
+
+```
+custom_components/viark/brand/
+├── icon.png      256x256
+└── icon@2x.png   512x512
+```
+
+The artwork is a **generic satellite dish, not the Viark logo**. A community
+integration should not imply an official association, and shipping a
+manufacturer's trademark would do exactly that. No `logo.png` is included for the
+same reason — that slot is a brand wordmark, which is not ours to invent.
+
+Regenerate with `python tools/make_brand_images.py` (needs `pillow`), or simply
+replace the PNGs. `tests/test_brand_images.py` checks size, squareness,
+transparency and filenames.
+
 ## Protocol
 
 The receiver speaks an undocumented protocol on TCP 20000. It is described in
@@ -223,20 +250,23 @@ python tools/test_actions.py                    # self-verifying tune + mute
 python tools/map_keys_guided.py --start 24 --end 56 --out keymap.json
 python tools/raw_capture.py --json '{"request":"14"}'
 python tools/ha_import_check.py                 # import against a real HA install
+python tools/make_brand_images.py               # regenerate the brand icons
 ```
 
 ### Tests
 
 ```bash
-pip install pytest pytest-asyncio pytest-timeout
+pip install pytest pytest-asyncio pytest-timeout pyyaml
 python -m pytest tests/ -q
 ```
 
-82 tests, no hardware required. They cover framing, compact-JSON encoding, XML
+93 tests, no hardware required. They cover framing, compact-JSON encoding, XML
 encoding, login-block decoding, reply-header layout, status codes, reconnection
 against a stub receiver, the diagnostic entity definitions, source-list
 labelling and channel resolution, and the key table — including a guard that key
-codes documented by only one source are never presented as verified.
+codes documented by only one source are never presented as verified, and guards
+that every entity has both a translated name and an icon, with no orphans left
+behind when one is removed.
 
 ## Contributing
 
@@ -263,5 +293,6 @@ reports a platform id, and behaviour is known to vary by platform.
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg
 [hacs-url]: https://github.com/hacs/integration
 [license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
+[brands]: https://github.com/home-assistant/brands
 [gabonator]: https://gist.github.com/gabonator/2c8885127cf6e0954c24e5d698ff99b6
 [pcgmscreen]: https://github.com/adamlahbib/PC-GMScreen

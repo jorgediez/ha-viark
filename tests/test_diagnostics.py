@@ -214,6 +214,43 @@ def test_every_entity_has_a_translated_name():
             )
 
 
+def test_every_entity_has_an_icon():
+    """Without an icon translation the frontend falls back to a generic dot."""
+    import json
+
+    icons = json.loads((ROOT / "icons.json").read_text(encoding="utf-8"))["entity"]
+
+    for description in sensor.SENSORS:
+        assert description.translation_key in icons["sensor"], (
+            f"{description.key} missing from icons.json"
+        )
+    for description in binary_sensor.BINARY_SENSORS:
+        assert description.translation_key in icons["binary_sensor"], (
+            f"{description.key} missing from icons.json"
+        )
+
+
+def test_no_orphaned_icons():
+    import json
+
+    icons = json.loads((ROOT / "icons.json").read_text(encoding="utf-8"))["entity"]
+    assert set(icons["sensor"]) == {d.translation_key for d in sensor.SENSORS}
+    assert set(icons["binary_sensor"]) == {
+        d.translation_key for d in binary_sensor.BINARY_SENSORS
+    }
+
+
+def test_service_icons_match_declared_services():
+    """A service icon keyed to a non-existent service is silently ignored."""
+    import json
+
+    import yaml
+
+    icons = json.loads((ROOT / "icons.json").read_text(encoding="utf-8"))
+    services = yaml.safe_load((ROOT / "services.yaml").read_text(encoding="utf-8"))
+    assert set(icons["services"]) == set(services)
+
+
 def test_no_orphaned_translations():
     """Names left behind after an entity is removed should not linger."""
     import json
