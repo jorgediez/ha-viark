@@ -1,0 +1,29 @@
+send_key:
+  name: Send key
+  description: >-
+    Inject a remote-control key code into the receiver. Accepts a named key, a
+    digit, or a raw numeric code for buttons outside the verified table.
+  target:
+    entity:
+      integration: viark
+      domain: media_player
+  fields:
+    key:
+      name: Key
+      description: >-
+        A key name (mute, power, epg, menu, volume_up, digit_7, ...) or a raw
+        numeric key code.
+      required: true
+      example: mute
+      selector:
+        text:
+    repeat:
+      name: Repeat
+      description: How many times to send the key.
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box

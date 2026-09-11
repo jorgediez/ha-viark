@@ -1,0 +1,12 @@
+{
+  "domain": "viark",
+  "name": "Viark Satellite Receiver",
+  "codeowners": ["@jorgediez"],
+  "config_flow": true,
+  "documentation": "https://github.com/jorgediez/ha-viark",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/jorgediez/ha-viark/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

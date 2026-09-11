@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtualenvs (a throwaway HA venv was used for import checks)
+.venv/
+.venv-ha/
+venv/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local tooling state
+.claude/
+keymap.json
+
+# Reverse-engineering source documents.
+android-reverse/
+pc-reverse/

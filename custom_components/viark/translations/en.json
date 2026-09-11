@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Viark satellite receiver",
+        "description": "Enter the address of your Viark receiver. It must be powered on or in soft standby; in deep standby it drops off the network entirely.",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "The receiver's IP address, for example 192.168.1.50.",
+          "port": "The control port. Leave at 20000 unless you have changed it."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not talk to a Viark receiver at that address. Check the IP, make sure the receiver is not in deep standby, and confirm port 20000 is reachable."
+    },
+    "abort": {
+      "already_configured": "This receiver is already configured."
+    }
+  },
+  "services": {
+    "send_key": {
+      "name": "Send key",
+      "description": "Inject a remote-control key code into the receiver.",
+      "fields": {
+        "key": {
+          "name": "Key",
+          "description": "A verified alias (channel_up, channel_down, exit) or a raw numeric key code."
+        },
+        "repeat": {
+          "name": "Repeat",
+          "description": "How many times to send the key."
+        }
+      }
+    }
+  }
+}
