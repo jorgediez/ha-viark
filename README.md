@@ -31,6 +31,7 @@ Starsat and similar), though only the SAT 4K has been tested.
 | Satellite list | request 22 |
 | Any remote key, by name or raw code | request 1040 |
 | Push updates when the receiver changes | notifications 2001–2019 |
+| Diagnostic entities (identity, capabilities) | login block + request 15 |
 
 ### Known limits
 
@@ -73,6 +74,47 @@ existing entry instead of creating a duplicate.
 * **`media_player`** — power, mute, volume step, channel up/down, and
   `select_source` over the full channel list.
 * **`remote`** — `remote.send_command` with named keys or raw codes.
+* **Diagnostic sensors** — see below.
+
+### Diagnostic entities
+
+The receiver's login reply is a 108-byte block carrying much more identity than
+setup needs, so the interesting parts are exposed as diagnostic entities. They
+are grouped under the device and hidden from the main dashboard.
+
+Enabled by default:
+
+| Entity | Source |
+|---|---|
+| Serial number | request 15, falling back to the login block |
+| Software version | request 15 |
+| IP address | login block (the address the receiver believes it has) |
+| Platform ID | login block — the chipset family, useful when reporting bugs |
+| Channel count | request 15 |
+| Receiver clock | receiver's own clock, handy for spotting a wrong time |
+| Satellite menu | login block capability flag |
+
+Registered but **disabled by default** — enable them in the entity settings if
+you are debugging or reporting an issue against another receiver model:
+
+`Data format` (JSON or XML) · `CPU chip ID` · `Flash ID` · `Customer ID` ·
+`Model ID` · `Software version (raw)` · `Software sub-version` ·
+`Maximum channels` · `SAT>IP mode` · `Client type`
+
+Two caveats worth knowing:
+
+* The login block is read **once per connection**, so those values only change
+  when the integration reconnects. That is correct for what they describe —
+  they are hardware identity, not live state.
+* `SAT>IP mode` and `Client type` are raw numbers rather than yes/no. The two
+  reverse-engineering sources describe those flag bits differently, so the value
+  is passed through instead of being given a meaning that might be inverted.
+* Some receivers report zeros for `Flash ID`. The SAT 4K used for development
+  does.
+
+The login block's "receiver full" bit is deliberately **not** exposed. The
+client refuses to finish logging in when it is set, so for any connected client
+it would be permanently false.
 
 ## Services
 
@@ -157,10 +199,11 @@ pip install pytest pytest-asyncio pytest-timeout
 python -m pytest tests/ -q
 ```
 
-36 tests, no hardware required. They cover framing, compact-JSON encoding, XML
+57 tests, no hardware required. They cover framing, compact-JSON encoding, XML
 encoding, login-block decoding, reply-header layout, status codes, reconnection
-against a stub receiver, and the key table — including a guard that key codes
-documented by only one source are never presented as verified.
+against a stub receiver, the diagnostic entity definitions, and the key table —
+including a guard that key codes documented by only one source are never
+presented as verified.
 
 ## Contributing
 

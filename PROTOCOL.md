@@ -80,8 +80,29 @@ without connecting.
 | 68 | 4 | receiver IP — dotted form is `b[71].b[70].b[69].b[68]` |
 | 72 | 1 | platform id (Viark SAT 4K = **140**) |
 | 73 | 2 | software version, big endian |
+| 75 | 1 | customer id |
+| 76 | 1 | model id |
 | 80 | 4 | software sub-version, little endian |
-| 84 | 1 | flags: bit0 receiver full · bit2 satellite menu · **bit6 format (1 JSON, 0 XML)** |
+| 84 | 1 | flags (see below) |
+
+### Flags byte (offset 84)
+
+| Bit | Meaning | Agreement |
+|---:|---|---|
+| 0 | receiver has no free client slot | both |
+| 1 | Android calls it `client_type`; PC calls it "this client is a slave" | **conflicting** |
+| 2 | satellite menu supported | both |
+| 3–4 | SAT>IP; only PC documents the encoding (1 enabled, 2 disabled) | location only |
+| 6 | **data format — 1 JSON, 0 XML** | both |
+| 7 | spectrum analyser supported | Android only |
+
+Bits 1 and 3–4 are exposed as raw values by the integration rather than being
+coerced into booleans, since a wrong polarity would be worse than a raw number.
+
+Observed on a Viark SAT 4K: `cpu_chip_id` is populated, `flash_id` reads as all
+zeros, and bit 0 flips to 1 in the discovery broadcast once a client is
+connected — which is the only place it is observable, because a login is
+refused while it is set.
 
 > **This matters.** A bare `<Command request="998" />` is enough to get the block,
 > but sending the login *without* `<data>` and `<uuid>` left this receiver

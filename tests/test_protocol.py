@@ -125,6 +125,32 @@ def test_login_flag_bit0_marks_receiver_full():
     assert parse_login_block(_make_login_block(flags=0x40))["connected_full"] is False
 
 
+def test_login_flag_bit2_marks_satellite_support():
+    assert parse_login_block(_make_login_block(flags=0x44))["sat_enable"] is True
+    assert parse_login_block(_make_login_block(flags=0x40))["sat_enable"] is False
+
+
+def test_login_block_exposes_chip_and_flash_ids():
+    """Both sources place an 8-byte CPU id at 52 and an 8-byte flash id at 60."""
+    info = parse_login_block(_make_login_block())
+    assert len(info["cpu_chip_id"]) == 16  # 8 bytes, hex encoded
+    assert len(info["flash_id"]) == 16
+    int(info["cpu_chip_id"], 16)  # must be valid hex
+    int(info["flash_id"], 16)
+
+
+def test_ambiguous_flag_bits_are_passed_through_raw():
+    """Bits 1 and 3-4 are described differently by the two sources.
+
+    They are exposed as raw values rather than being given a boolean meaning
+    that might be inverted.
+    """
+    info = parse_login_block(_make_login_block(flags=0b0001_1010))
+    assert info["client_type"] == 1
+    assert info["sat2ip"] == 0b11
+    assert info["flags"] == 0b0001_1010
+
+
 def test_parse_login_block_rejects_bad_magic():
     bad = bytes(b ^ 0x5B for b in reversed(bytes(LOGIN_BLOCK_LENGTH)))
     with pytest.raises(ViarkConnectionError):

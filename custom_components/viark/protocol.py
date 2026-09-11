@@ -142,6 +142,8 @@ def parse_login_block(block: bytes) -> dict[str, Any]:
         ),
         # NUL-terminated, and this firmware pads it with a trailing newline.
         "model": plain[20:52].split(b"\0")[0].decode("ascii", "replace").strip(),
+        "cpu_chip_id": plain[52:60].hex(),
+        "flash_id": plain[60:68].hex(),
         # Stored little-endian, so the dotted form reads back to front.
         "ip": ".".join(str(x) for x in plain[71:67:-1]),
         "platform_id": plain[72],
@@ -149,8 +151,15 @@ def parse_login_block(block: bytes) -> dict[str, Any]:
         "customer_id": plain[75],
         "model_id": plain[76],
         "sw_sub_version": int.from_bytes(plain[80:84], "little"),
+        "flags": flags_a,
         "connected_full": bool(flags_a & 0x01),
+        # Sources describe bit1 differently (Android "client_type", PC "this
+        # client is a slave"), so the raw bit is exposed without an opinion.
+        "client_type": (flags_a >> 1) & 0x01,
         "sat_enable": bool(flags_a & 0x04),
+        # Both agree on the location; only one documents the encoding, so the
+        # two-bit value is passed through rather than coerced to a boolean.
+        "sat2ip": (flags_a >> 3) & 0x03,
         "use_json": bool(flags_a & 0x40),
     }
 

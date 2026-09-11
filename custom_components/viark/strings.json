@@ -21,6 +21,63 @@
       "already_configured": "This receiver is already configured."
     }
   },
+  "entity": {
+    "sensor": {
+      "serial_number": {
+        "name": "Serial number"
+      },
+      "software_version": {
+        "name": "Software version"
+      },
+      "ip_address": {
+        "name": "IP address"
+      },
+      "platform_id": {
+        "name": "Platform ID"
+      },
+      "channel_count": {
+        "name": "Channel count"
+      },
+      "receiver_clock": {
+        "name": "Receiver clock"
+      },
+      "data_format": {
+        "name": "Data format"
+      },
+      "cpu_chip_id": {
+        "name": "CPU chip ID"
+      },
+      "flash_id": {
+        "name": "Flash ID"
+      },
+      "customer_id": {
+        "name": "Customer ID"
+      },
+      "model_id": {
+        "name": "Model ID"
+      },
+      "software_version_raw": {
+        "name": "Software version (raw)"
+      },
+      "software_sub_version": {
+        "name": "Software sub-version"
+      },
+      "max_channels": {
+        "name": "Maximum channels"
+      },
+      "satip_mode": {
+        "name": "SAT>IP mode"
+      },
+      "client_type": {
+        "name": "Client type"
+      }
+    },
+    "binary_sensor": {
+      "satellite_menu": {
+        "name": "Satellite menu"
+      }
+    }
+  },
   "services": {
     "send_key": {
       "name": "Send key",

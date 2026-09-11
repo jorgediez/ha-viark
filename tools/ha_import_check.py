@@ -3,8 +3,11 @@
 Catches breakage that the standalone protocol tests cannot see: wrong helper
 import paths, changed entity APIs, bad service registration signatures.
 
-Run with the Home Assistant virtualenv:
-    .venv-ha/Scripts/python.exe tools/ha_import_check.py
+Needs a virtualenv with Home Assistant installed, which is not part of the repo:
+
+    python -m venv .venv-ha
+    .venv-ha/Scripts/pip install homeassistant     # Scripts/ -> bin/ on POSIX
+    .venv-ha/Scripts/python tools/ha_import_check.py
 """
 
 from __future__ import annotations
@@ -24,6 +27,8 @@ MODULES = [
     "custom_components.viark",
     "custom_components.viark.media_player",
     "custom_components.viark.remote",
+    "custom_components.viark.sensor",
+    "custom_components.viark.binary_sensor",
 ]
 
 
@@ -49,9 +54,11 @@ def main() -> int:
         return 1
 
     # Spot-check the pieces Home Assistant will actually touch.
+    from custom_components.viark.binary_sensor import BINARY_SENSORS
     from custom_components.viark.config_flow import ViarkConfigFlow
     from custom_components.viark.media_player import ViarkMediaPlayer
     from custom_components.viark.remote import ViarkRemote, resolve_key
+    from custom_components.viark.sensor import SENSORS
 
     assert ViarkConfigFlow.VERSION == 1
     assert resolve_key("mute") == 23
@@ -60,6 +67,9 @@ def main() -> int:
     print("config flow, entity classes and key resolution all import cleanly")
     print(f"  media_player features: {ViarkMediaPlayer._attr_supported_features}")
     print(f"  remote entity name:    {ViarkRemote._attr_name}")
+    print(f"  diagnostic sensors:    {len(SENSORS)} "
+          f"({sum(d.entity_registry_enabled_default for d in SENSORS)} enabled by default)")
+    print(f"  binary sensors:        {len(BINARY_SENSORS)}")
     return 0
 
 

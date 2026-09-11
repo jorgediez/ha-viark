@@ -14,7 +14,12 @@ from .protocol import ViarkClient, ViarkConnectionError
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.REMOTE,
+    Platform.SENSOR,
+]
 
 type ViarkConfigEntry = ConfigEntry[ViarkCoordinator]
 
