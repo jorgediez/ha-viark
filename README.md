@@ -16,6 +16,9 @@ Starsat and similar), though only the SAT 4K has been tested.
 > `enigma2` / OpenWebif integration does not work with them. That is why this
 > integration exists.
 
+For an on-screen remote to go with it, see the companion
+[**ha-viark-remote-card**][remote-card].
+
 ## Features
 
 | Capability | Implementation |
@@ -199,6 +202,18 @@ a different key from `freeze` (55).
 
 Run `python tools/viark_cli.py keys` for the table with codes.
 
+## Companion dashboard card
+
+[**ha-viark-remote-card**][remote-card] is a custom Lovelace card that draws an
+on-screen remote in the style of the receiver's physical one and drives it through
+this integration. If you would rather press buttons than write `send_key` calls,
+start there — installation and configuration are documented in that repository.
+
+It is a separate project with its own release cycle; this integration does not
+require it, and the card needs this integration installed to have anything to
+talk to. The named keys listed above are what the card sends, so anything the
+card can do is also reachable from an automation.
+
 ## Icons
 
 Entity and service icons ship in `icons.json` and appear as soon as the
@@ -307,6 +322,7 @@ reports a platform id, and behaviour is known to vary by platform.
 
 [MIT](LICENSE)
 
+[remote-card]: https://github.com/jorgediez/ha-viark-remote-card
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg
 [hacs-url]: https://github.com/hacs/integration
 [license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
