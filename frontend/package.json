@@ -1,0 +1,47 @@
+{
+  "name": "ha-viark-remote-card",
+  "version": "1.0.0",
+  "description": "A Home Assistant Lovelace card that mimics the Viark satellite receiver remote control.",
+  "private": true,
+  "type": "module",
+  "main": "dist/ha-viark-remote-card.js",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "demo": "node scripts/serve-demo.mjs"
+  },
+  "keywords": [
+    "home-assistant",
+    "hacs",
+    "lovelace",
+    "custom-card",
+    "viark",
+    "remote"
+  ],
+  "author": "jorgediez",
+  "license": "MIT",
+  "dependencies": {
+    "@mdi/js": "^7.4.47",
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/node": "^22.20.2",
+    "rollup": "^4.63.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
+  },
+  "homepage": "https://github.com/jorgediez/ha-viark-remote-card#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jorgediez/ha-viark-remote-card.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jorgediez/ha-viark-remote-card/issues"
+  }
+}

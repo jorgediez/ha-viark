@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Viark Remote Card demo</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+        background: #111418;
+        color: #e1e1e1;
+        font-family: Roboto, system-ui, sans-serif;
+      }
+      ha-card {
+        display: block;
+        border-radius: 12px;
+        background: #1c1c1c;
+        border: 1px solid #2b2b2b;
+      }
+      #card {
+        width: 340px;
+      }
+      #log {
+        flex: 1 1 320px;
+        min-height: 200px;
+        margin: 0;
+        padding: 12px;
+        border-radius: 12px;
+        background: #1c1c1c;
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+      .controls button {
+        margin: 0 6px 6px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="card"></div>
+    <div style="flex: 1 1 320px">
+      <div class="controls">
+        <button data-state="playing">Playing</button>
+        <button data-state="standby">Standby</button>
+        <button data-state="unavailable">Unavailable</button>
+        <button id="remote">Bind to remote entity</button>
+      </div>
+      <pre id="log">Press buttons on the remote. Actions appear here.</pre>
+    </div>
+
+    <script type="module">
+      import "../dist/ha-viark-remote-card.js";
+
+      const log = document.getElementById("log");
+      const write = (line) => (log.textContent = `${line}\n${log.textContent}`);
+
+      const player = (state) => ({
+        entity_id: "media_player.viark_sat_4k",
+        state,
+        attributes: {
+          friendly_name: "Viark SAT 4K",
+          media_channel: "49",
+          media_title: "Sports HD",
+        },
+      });
+
+      let hass = {
+        language: "en",
+        states: {
+          "media_player.viark_sat_4k": player("playing"),
+          "remote.viark_sat_4k_remote": {
+            entity_id: "remote.viark_sat_4k_remote",
+            state: "on",
+            attributes: { friendly_name: "Viark SAT 4K Remote" },
+          },
+        },
+        entities: {
+          "media_player.viark_sat_4k": { entity_id: "media_player.viark_sat_4k", device_id: "d1", platform: "viark" },
+          "remote.viark_sat_4k_remote": { entity_id: "remote.viark_sat_4k_remote", device_id: "d1", platform: "viark" },
+        },
+        callService: async (domain, service, data, target) => {
+          write(`${domain}.${service} ${JSON.stringify({ data, target })}`);
+        },
+      };
+
+      const card = document.createElement("viark-remote-card");
+      const params = new URLSearchParams(location.search);
+      const config = { type: "custom:viark-remote-card", entity: "media_player.viark_sat_4k" };
+      if (params.get("lang")) hass.language = params.get("lang");
+      card.setConfig(config);
+      card.hass = hass;
+      document.getElementById("card").append(card);
+
+      window.addEventListener("hass-notification", (ev) => write(`toast: ${ev.detail.message}`));
+      window.addEventListener("haptic", (ev) => console.debug("haptic", ev.detail));
+
+      for (const button of document.querySelectorAll("[data-state]")) {
+        button.addEventListener("click", () => {
+          hass = { ...hass, states: { ...hass.states, "media_player.viark_sat_4k": player(button.dataset.state) } };
+          card.hass = hass;
+        });
+      }
+      document.getElementById("remote").addEventListener("click", () => {
+        card.setConfig({ ...config, entity: "remote.viark_sat_4k_remote" });
+        write("bound to remote.viark_sat_4k_remote");
+      });
+    </script>
+  </body>
+</html>
