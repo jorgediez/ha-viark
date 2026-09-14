@@ -44,9 +44,9 @@ const defs = {
   power: { icon: mdiPower, action: { type: "power" } },
   mute: { icon: mdiVolumeOff, action: key("mute") },
 
-  resol: { label: "RESOL", action: NONE },
+  resol: { label: "RESOL", action: key("resolution") },
   txt: { label: "TXT", action: key("teletext") },
-  audio: { label: "AUDIO", action: NONE },
+  audio: { label: "AUDIO", action: key("audio") },
   subt: { label: "SUBT", action: key("subtitle") },
 
   digit_1: { label: "1", action: key("digit_1") },
@@ -66,6 +66,8 @@ const defs = {
   vol_down: { label: "VOL\n−", action: key("volume_down"), repeat: true },
   fav: { label: "FAV", action: key("favourite") },
   epg: { label: "EPG", action: key("epg") },
+  // The receiver's own CH+/CH- keys (69/70 since integration 1.1.0), not the arrows:
+  // they also page through the EPG and channel list, as on the physical remote.
   ch_up: { label: "CH\n+", action: key("channel_up"), repeat: true },
   ch_down: { label: "CH\n−", action: key("channel_down"), repeat: true },
 
@@ -84,8 +86,8 @@ const defs = {
   yellow: { action: key("yellow") },
   blue: { action: key("blue") },
 
-  f1: { label: "F1", action: NONE },
-  f2: { label: "F2", action: NONE },
+  f1: { label: "F1", action: key("f1") },
+  f2: { label: "F2", action: key("f2") },
   // The integration's "usb" key opens the receiver's media player, which is what
   // this remote labels MEDIA.
   media: { label: "MEDIA", action: key("usb") },
@@ -96,7 +98,7 @@ const defs = {
   pause: { icon: mdiPause, action: key("pause") },
   fast_forward: { icon: mdiFastForward, action: key("fast_forward") },
 
-  timer: { label: "TIMER", action: NONE },
+  timer: { label: "TIMER", action: key("timer") },
   record: { icon: mdiRecord, action: key("record") },
   stop: { icon: mdiStop, action: key("stop") },
   tv_radio: { label: "TV/R", action: key("tv_radio") },

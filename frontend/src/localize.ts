@@ -3,7 +3,7 @@ type Dictionary = { [key: string]: string | Dictionary };
 const digits = (): Record<string, string> =>
   Object.fromEntries(Array.from({ length: 10 }, (_, n) => [`digit_${n}`, String(n)]));
 
-const unsupportedList = "RESOL, AUDIO, <, >, F1, F2, UPDATE, TIMER";
+const unsupportedList = "<, >, UPDATE";
 
 const en: Dictionary = {
   card: {

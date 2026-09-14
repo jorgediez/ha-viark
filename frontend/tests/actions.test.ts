@@ -14,14 +14,15 @@ const config = (overrides: Partial<ViarkRemoteCardConfig> = {}): ViarkRemoteCard
 });
 
 /**
- * KEY_ALIASES from custom_components/viark/const.py in jorgediez/ha-viark.
+ * KEY_ALIASES from custom_components/viark/const.py in jorgediez/ha-viark 1.1.0.
  * Every named key the card sends must be one the integration accepts.
  */
 const INTEGRATION_KEY_ALIASES = new Set([
   "up", "down", "left", "right", "ok", "select", "menu", "exit", "back",
   "red", "green", "yellow", "blue", "tv_radio", "mute", "recall", "satellite",
   "subtitle", "epg", "favourite", "favorite", "teletext", "volume_up",
-  "volume_down", "page_up", "page_down", "find", "power", "usb", "info",
+  "volume_down", "page_up", "page_down", "find", "power", "usb", "audio",
+  "freeze", "resolution", "timer", "f1", "f2", "info",
   "record", "rewind", "fast_forward", "play", "stop", "pause", "previous",
   "next", "channel_up", "channel_down",
   ...Array.from({ length: 10 }, (_, d) => `digit_${d}`),
@@ -40,7 +41,7 @@ describe("button table", () => {
   it("leaves exactly the unmapped buttons without an action", () => {
     const unsupported = BUTTON_IDS.filter((id) => BUTTONS[id].action.type === "none");
     expect(unsupported.sort()).toEqual(
-      ["audio", "chevron_left", "chevron_right", "f1", "f2", "resol", "timer", "update"].sort(),
+      ["chevron_left", "chevron_right", "update"].sort(),
     );
   });
 
@@ -87,8 +88,25 @@ describe("resolveAction", () => {
     expect(resolveAction("tv_radio", config())).toEqual({ type: "call", call: keyCall(PLAYER, "tv_radio") });
   });
 
+  it("maps the keys added in integration 1.1.0", () => {
+    for (const [button, key] of [
+      ["resol", "resolution"],
+      ["audio", "audio"],
+      ["timer", "timer"],
+      ["f1", "f1"],
+      ["f2", "f2"],
+    ] as const) {
+      expect(resolveAction(button, config()), button).toEqual({ type: "call", call: keyCall(PLAYER, key) });
+    }
+  });
+
+  it("uses the receiver's dedicated channel keys, not the arrows", () => {
+    expect(resolveAction("ch_up", config())).toEqual({ type: "call", call: keyCall(PLAYER, "channel_up") });
+    expect(resolveAction("ch_down", config())).toEqual({ type: "call", call: keyCall(PLAYER, "channel_down") });
+  });
+
   it("reports buttons the integration cannot send", () => {
-    expect(resolveAction("f1", config())).toEqual({ type: "unsupported" });
+    expect(resolveAction("update", config())).toEqual({ type: "unsupported" });
   });
 
   it("sends a raw key code override as text", () => {

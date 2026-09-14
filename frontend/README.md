@@ -33,7 +33,9 @@ actions that integration provides.
 ## Requirements
 
 - Home Assistant 2024.6 or newer.
-- The [Viark Satellite Receiver integration][integration], set up and working.
+- The [Viark Satellite Receiver integration][integration] **1.1.0 or newer**, set up
+  and working. Older versions lack the RESOL, AUDIO, TIMER, F1 and F2 keys, and
+  send CH+/CH− as the up/down arrows.
 
 ## Installation
 
@@ -103,15 +105,15 @@ soft standby. That is a limit of the receiver.
 |---|---|---|
 | ⏻ | `power` | toggle power |
 | 🔇 | `mute` | `mute` |
-| RESOL | `resol` | — *not supported yet* |
+| RESOL | `resol` | `resolution` |
 | TXT | `txt` | `teletext` |
-| AUDIO | `audio` | — *not supported yet* |
+| AUDIO | `audio` | `audio` |
 | SUBT | `subt` | `subtitle` |
 | 0 – 9 | `digit_0` … `digit_9` | `digit_0` … `digit_9` |
 | < | `chevron_left` | — *not supported yet* |
 | > | `chevron_right` | — *not supported yet* |
 | VOL + / VOL − | `vol_up` / `vol_down` | `volume_up` / `volume_down` (hold to repeat) |
-| CH + / CH − | `ch_up` / `ch_down` | `channel_up` / `channel_down` (hold to repeat) |
+| CH + / CH − | `ch_up` / `ch_down` | `channel_up` / `channel_down`, the receiver's own channel keys (hold to repeat) |
 | FAV | `fav` | `favourite` |
 | EPG | `epg` | `epg` |
 | INFO | `info` | `info` |
@@ -121,11 +123,11 @@ soft standby. That is a limit of the receiver.
 | ▲ ▼ ◀ ▶ | `up` `down` `left` `right` | `up` `down` `left` `right` (hold to repeat) |
 | OK | `ok` | `ok` |
 | Red / Green / Yellow / Blue | `red` `green` `yellow` `blue` | `red` `green` `yellow` `blue` |
-| F1 / F2 | `f1` / `f2` | — *not supported yet* |
+| F1 / F2 | `f1` / `f2` | `f1` / `f2` |
 | MEDIA | `media` | `usb` |
 | UPDATE | `update` | — *not supported yet* |
 | ⏪ ▶ ⏸ ⏩ | `rewind` `play` `pause` `fast_forward` | `rewind` `play` `pause` `fast_forward` |
-| TIMER | `timer` | — *not supported yet* |
+| TIMER | `timer` | `timer` |
 | ⏺ / ⏹ | `record` / `stop` | `record` / `stop` |
 | TV/R | `tv_radio` | `tv_radio` |
 
@@ -150,10 +152,8 @@ type: custom:viark-remote-card
 entity: media_player.viark_sat_4k
 name: Living room
 buttons:
-  # Raw codes outside the integration's verified table
-  f1:
-    key: 44
-  audio:
+  # A raw key code the integration has no name for
+  chevron_left:
     key: 25
   # Any action
   update:
@@ -181,6 +181,8 @@ number for each button.
 - **"Custom element doesn't exist: viark-remote-card"**: the resource is not
   loaded. Check **Settings → Dashboards → Resources**, then clear the browser or
   companion app cache.
+- **"Unknown Viark key 'resolution'"** (or `audio`, `timer`, `f1`, `f2`): the
+  integration is older than 1.1.0. Update it.
 - **Buttons are greyed out**: the entity is `unavailable`. The integration cannot
   reach the receiver. In deep standby it leaves the network and cannot be woken
   over IP.
