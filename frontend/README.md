@@ -68,7 +68,7 @@ entity: media_player.viark_sat_4k
 | Option        | Type    | Default          | Description |
 |---------------|---------|------------------|-------------|
 | `entity`      | string  | **required**     | The Viark `media_player` or `remote` entity. |
-| `name`        | string  | device name      | Text printed at the bottom of the remote. |
+| `name`        | string  | `VIARK`          | Text printed at the bottom of the remote. |
 | `show_name`   | boolean | `true`           | Show the name at the bottom. |
 | `show_status` | boolean | `true`           | Show power state and current channel in the top window. |
 | `haptics`     | boolean | `true`           | Vibrate on press in the companion app. |
@@ -214,8 +214,8 @@ add it as a resource, as in [manual installation](#manual).
 ## Trademark
 
 This is a community project, not affiliated with or endorsed by Viark. The card
-imitates the remote's button layout but does not reproduce the Viark logo. By
-default the bottom of the remote shows your device name.
+imitates the remote's button layout. The name at the bottom is plain text, not the
+Viark logo.
 
 ## License
 

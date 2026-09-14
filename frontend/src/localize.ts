@@ -22,7 +22,7 @@ const en: Dictionary = {
   editor: {
     entity: "Viark entity (media player or remote)",
     name: "Name",
-    name_helper: "Shown at the bottom of the remote. Defaults to the device name.",
+    name_helper: "Shown at the bottom of the remote. Defaults to VIARK.",
     show_name: "Show name",
     show_status: "Show power and channel",
     haptics: "Haptic feedback",
@@ -89,7 +89,7 @@ const es: Dictionary = {
   editor: {
     entity: "Entidad Viark (reproductor multimedia o mando)",
     name: "Nombre",
-    name_helper: "Se muestra al pie del mando. Por defecto, el nombre del dispositivo.",
+    name_helper: "Se muestra al pie del mando. Por defecto, VIARK.",
     show_name: "Mostrar nombre",
     show_status: "Mostrar encendido y canal",
     haptics: "Respuesta háptica",

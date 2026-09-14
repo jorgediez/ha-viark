@@ -15,6 +15,9 @@ export const HOLD_DELAY_MS = 500;
  */
 export const REPEAT_INTERVAL_MS = 450;
 
+/** Printed at the bottom of the remote unless `name` is set. */
+export const DEFAULT_NAME = "VIARK";
+
 export const DEFAULTS = {
   show_name: true,
   show_status: true,

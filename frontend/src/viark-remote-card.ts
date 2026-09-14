@@ -5,6 +5,7 @@ import { resolveAction, validateConfig } from "./actions";
 import { BUTTONS, isButtonId, type ButtonId } from "./buttons";
 import {
   CARD_TYPE,
+  DEFAULT_NAME,
   DEFAULTS,
   EDITOR_TYPE,
   HOLD_DELAY_MS,
@@ -134,18 +135,19 @@ export class ViarkRemoteCard extends LitElement {
     const player = playerId ? this.hass.states[playerId] : undefined;
     const power = this._powerState(entity, player);
     const disabled = power === "unavailable";
-    const name =
+    const name = this._config.name ?? DEFAULT_NAME;
+    const deviceName =
       this._config.name ??
       (player?.attributes.friendly_name as string | undefined) ??
       (entity.attributes.friendly_name as string | undefined) ??
-      "Viark";
+      name;
 
     const key = (id: ButtonId, className = "key") => this._renderKey(id, className, disabled);
 
     return html`
       <ha-card>
         <div class="frame">
-          <div class="remote" role="group" aria-label=${name}>
+          <div class="remote" role="group" aria-label=${deviceName}>
             <div class="cap">
               <span class="led ${power}"></span>
               ${this._option("show_status")
