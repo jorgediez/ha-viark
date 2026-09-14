@@ -27,9 +27,9 @@ from .const import (
     ATTR_KEY,
     ATTR_REPEAT,
     DOMAIN,
-    KEY_DOWN,
+    KEY_CHANNEL_DOWN,
+    KEY_CHANNEL_UP,
     KEY_MUTE,
-    KEY_UP,
     KEY_VOLUME_DOWN,
     KEY_VOLUME_UP,
     SERVICE_SEND_KEY,
@@ -183,11 +183,11 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
 
     async def async_media_next_track(self) -> None:
         """Channel up."""
-        await self._send(KEY_UP)
+        await self._send(KEY_CHANNEL_UP)
 
     async def async_media_previous_track(self) -> None:
         """Channel down."""
-        await self._send(KEY_DOWN)
+        await self._send(KEY_CHANNEL_DOWN)
 
     async def async_volume_up(self) -> None:
         await self._send(KEY_VOLUME_UP)

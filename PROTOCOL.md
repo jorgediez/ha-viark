@@ -184,15 +184,49 @@ Codes **both sources agree on**, which is what the integration aliases:
 
 Digits are contiguous: 12 is "0", 13 is "1" … 21 is "9".
 
-**Not aliased**, because only one source documents them: 24–28, 40, 41, 44–56,
-66–81 (PC only) and 82 Home (Android only). They can still be sent as raw
-numbers.
-
-Also excluded: PC-only codes 69/70 (CH+/CH−). On live TV the Up/Down arrows
-change channel anyway, which is verified on this hardware.
-
 Confirmed by live round trip: **1** and **2** change channel, **7** closes an
-overlay, **23** toggles mute (checked by reading request 19 back).
+overlay, **23** toggles mute (checked by reading request 19 back), **63** pauses
+USB media playback, and **37/38** jump ten rows in the EPG.
+
+### Single-source codes confirmed on the hardware
+
+These appear in only one document, so they began unaliased. Pressing them on a
+Viark SAT 4K while watching the TV settled what they do, which outranks a
+document that merely omits them. The names below are the labels printed on the
+physical remote — twice these were more accurate than the source's own wording.
+
+| Code | Key | Behaviour observed | Source's label |
+|---:|---|---|---|
+| 24 | Resol | Opens the resolution / refresh-rate menu | "Display" (PC) |
+| 26 | Timer | Opens the Event timer menu | "Time" (PC) |
+| 44 | F1 | Matches the remote's F1 | F1 (PC) |
+| 45 | F2 | Matches the remote's F2 | F2 (PC) |
+| 54 | Audio | Opens the audio-language menu | Audio (PC) |
+| 55 | — | **Freezes** the picture and stops audio; sending it again resumes, and so does Exit | "Pause" (PC) |
+| 69 | CH+ | One channel up on live TV, ten rows in the EPG / channel list | CH + (PC) |
+| 70 | CH− | One channel down on live TV, ten rows in the EPG / channel list | CH − (PC) |
+
+Two of those change how the protocol should be read:
+
+**55 and 63 are different keys, and both are real.** The Android app's key table
+gives Pause as 63 while its voice-command assets call 55 "pause", which looked
+like the sources contradicting each other. They do not: 63 is the remote's Pause
+button and acts on USB media playback, whereas 55 freezes live TV and has no
+button on the remote at all. It is reachable only over the network.
+
+**69/70 are the receiver's real channel keys**, so the integration aliases
+`channel_up`/`channel_down` to them rather than to the arrows. The arrows step the
+channel only on live TV — with a menu open they move the selection (see status
+17) — so they were always a workaround.
+
+Nothing observable reports a freeze: the receiver keeps answering as though it
+were playing, so no entity state is derived from code 55.
+
+**Still not aliased**, documented by a single source and never pressed: 25, 27,
+28, 40, 41, 46–53, 56, 66–68, 71–81 (PC only) and 82 Home (Android only). They
+can still be sent as raw numbers. Every single-source code tested so far has
+matched the PC document's code, which is reason for mild confidence in the rest —
+not reason to alias them untested.
 
 Platform-specific tables exist (Android documents a different table for platform
 30, PC one for Trident 8471). The Viark is platform 140, so the standard table

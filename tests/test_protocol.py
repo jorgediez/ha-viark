@@ -237,11 +237,67 @@ def test_agreed_key_codes(alias, code):
     assert KEY_ALIASES[alias] == code
 
 
-def test_single_source_codes_are_not_aliased():
-    """Codes only one source documents must not be presented as verified."""
-    assert 82 not in KEY_ALIASES.values()  # Home, Android-only
-    assert 69 not in KEY_ALIASES.values()  # CH+, PC-only
-    assert 70 not in KEY_ALIASES.values()  # CH-, PC-only
+#: Single-source codes confirmed by pressing them on a real receiver. These are
+#: allowed to be aliased even though only one document mentions them; the alias
+#: names come from the labels printed on the physical remote.
+HARDWARE_CONFIRMED_SINGLE_SOURCE = {
+    24: "resolution",
+    26: "timer",
+    44: "f1",
+    45: "f2",
+    54: "audio",
+    55: "freeze",
+    69: "channel_up",
+    70: "channel_down",
+}
+
+#: Single-source codes nobody has pressed yet. 25, 27, 28, 40, 41, 46-53, 56, 66-68
+#: and 71-81 come from the PC client only; 82 (Home) from the Android app only.
+UNTESTED_SINGLE_SOURCE = (
+    {25, 27, 28, 40, 41, 56, 82}
+    | set(range(46, 54))
+    | set(range(66, 69))
+    | set(range(71, 82))
+)
+
+
+@pytest.mark.parametrize(("code", "alias"), sorted(HARDWARE_CONFIRMED_SINGLE_SOURCE.items()))
+def test_hardware_confirmed_codes_are_aliased(code, alias):
+    """A code verified on the hardware outranks a document that omits it."""
+    assert KEY_ALIASES[alias] == code
+
+
+def test_untested_single_source_codes_are_not_aliased():
+    """Codes with one source and no hardware check must not look verified."""
+    aliased = set(KEY_ALIASES.values())
+    assert not (UNTESTED_SINGLE_SOURCE & aliased), (
+        "these codes are documented by only one source and have never been tested: "
+        f"{sorted(UNTESTED_SINGLE_SOURCE & aliased)}"
+    )
+
+
+def test_the_two_confirmation_sets_do_not_overlap():
+    """A code cannot be both confirmed and untested; guards careless edits above."""
+    assert not (set(HARDWARE_CONFIRMED_SINGLE_SOURCE) & UNTESTED_SINGLE_SOURCE)
+
+
+def test_channel_stepping_uses_the_receivers_own_channel_keys():
+    """The arrows only step channels on live TV; 69/70 are the real CH+/CH- keys."""
+    assert KEY_ALIASES["channel_up"] == 69
+    assert KEY_ALIASES["channel_down"] == 70
+    assert KEY_ALIASES["up"] == 1
+    assert KEY_ALIASES["down"] == 2
+
+
+def test_freeze_and_pause_are_different_keys():
+    """55 freezes live TV, 63 pauses USB playback -- both confirmed on hardware.
+
+    The two sources disagreed here: the Android voice assets call 55 "pause" while
+    its key table gives 63. Pressing both settled it, so neither alias may drift
+    onto the other's code.
+    """
+    assert KEY_ALIASES["freeze"] == 55
+    assert KEY_ALIASES["pause"] == 63
 
 
 def test_channel_page_size_respects_the_documented_limit():

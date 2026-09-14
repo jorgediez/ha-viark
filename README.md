@@ -25,7 +25,7 @@ Starsat and similar), though only the SAT 4K has been tested.
 | Mute and unmute | key 23, state read via request 19 |
 | Volume up / down | keys 35 / 36 |
 | **Direct channel selection** | request 1000 — jumps straight to any channel |
-| Channel up / down | keys 1 / 2 |
+| Channel up / down | keys 69 / 70, the receiver's own CH+/CH− |
 | Current channel and on-screen number | request 3 |
 | Full channel list | request 0, paged and cached |
 | Satellite list | request 22 |
@@ -184,8 +184,18 @@ data:
 Named keys: `up` `down` `left` `right` `ok` `menu` `exit` `back` `red` `green`
 `yellow` `blue` `digit_0`…`digit_9` `tv_radio` `mute` `recall` `satellite`
 `subtitle` `epg` `favourite` `teletext` `volume_up` `volume_down` `page_up`
-`page_down` `find` `power` `usb` `info` `record` `rewind` `fast_forward` `play`
-`stop` `pause` `previous` `next` `channel_up` `channel_down`.
+`page_down` `find` `power` `usb` `audio` `freeze` `resolution` `timer` `f1` `f2`
+`info` `record` `rewind` `fast_forward` `play` `stop` `pause` `previous` `next`
+`channel_up` `channel_down`.
+
+`freeze` is worth knowing about: it stops the picture and the sound where they
+are, and sending it again — or `exit` — returns to live. **No button on the
+physical remote does this**, so it is something the integration can do that the
+remote cannot. The receiver reports nothing while frozen, so the media player
+still reads `playing`; don't build an automation that depends on detecting it.
+
+`pause` (63) is the remote's Pause button and acts on USB media playback, which is
+a different key from `freeze` (55).
 
 Run `python tools/viark_cli.py keys` for the table with codes.
 
@@ -227,7 +237,8 @@ reverse-engineering efforts** — one of the GMScreen Android app, one of the
 PC-GMScreen Java client — and treating only details they agree on as
 established. Everything was then verified against real hardware. Where the two
 sources conflict (for example the meaning of notification 2014), the conflict is
-recorded and the detail is not relied upon.
+recorded and the detail is not relied upon — unless hardware settles it, as
+happened with key codes 55 and 63.
 
 ## Development
 
@@ -260,20 +271,26 @@ pip install pytest pytest-asyncio pytest-timeout pyyaml
 python -m pytest tests/ -q
 ```
 
-93 tests, no hardware required. They cover framing, compact-JSON encoding, XML
+104 tests, no hardware required. They cover framing, compact-JSON encoding, XML
 encoding, login-block decoding, reply-header layout, status codes, reconnection
 against a stub receiver, the diagnostic entity definitions, source-list
-labelling and channel resolution, and the key table — including a guard that key
-codes documented by only one source are never presented as verified, and guards
-that every entity has both a translated name and an icon, with no orphans left
-behind when one is removed.
+labelling and channel resolution, and the key table — including a guard that a
+single-source code is never presented as verified unless it has been confirmed on
+hardware, that `freeze` and `pause` never drift onto each other's code, and that
+every entity has both a translated name and an icon, with no orphans left behind
+when one is removed.
 
 ## Contributing
 
-Key codes 24–28, 40, 41, 44–56 and 66–82 appear in only one of the two
-reverse-engineering sources and are deliberately not aliased. If you map any of
-them on real hardware — `tools/map_keys_guided.py` helps — a PR adding them to
-`KEY_ALIASES` is welcome.
+Key codes 25, 27, 28, 40, 41, 46–53, 56, 66–68 and 71–82 appear in only one of
+the two reverse-engineering sources and have not been pressed on real hardware,
+so they are deliberately not aliased. If you map any of them —
+`tools/map_keys_guided.py` helps — a PR adding them to `KEY_ALIASES` is welcome.
+Name them after the label on your remote rather than the one in
+[PROTOCOL.md](PROTOCOL.md): where the two have differed, the remote was right.
+
+Eight codes have already made that trip (24, 26, 44, 45, 54, 55, 69, 70) and are
+recorded in PROTOCOL.md with the behaviour observed.
 
 Reports from other receiver models are especially useful: the login block
 reports a platform id, and behaviour is known to vary by platform.
