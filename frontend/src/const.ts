@@ -1,4 +1,4 @@
-export const VERSION = "1.0.0";
+export const VERSION = "1.1.0";
 
 export const CARD_TYPE = "viark-remote-card";
 export const EDITOR_TYPE = "viark-remote-card-editor";
