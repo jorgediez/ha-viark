@@ -275,8 +275,8 @@ class ViarkClient:
         """Open the socket and log in. The caller must hold ``_connect_lock``.
 
         Split out so the lock is visible in connect() rather than buried in an
-        indent. Note that this calls disconnect() on failure, which must not take
-        the lock -- see the comment there.
+        indent. Its failure paths call _disconnect_locked() rather than the public
+        disconnect(), which would deadlock on the lock this already holds.
         """
         # A previous session may have ended in the read loop; clear its tasks so
         # reconnecting does not leave a second keepalive running.
@@ -309,12 +309,12 @@ class ViarkClient:
                 self._reader.readexactly(LOGIN_BLOCK_LENGTH), timeout=self.timeout
             )
         except (OSError, asyncio.IncompleteReadError, asyncio.TimeoutError) as exc:
-            await self.disconnect()
+            await self._disconnect_locked()
             raise ViarkConnectionError(f"login failed: {exc}") from exc
 
         self.info = parse_login_block(block)
         if self.info["connected_full"]:
-            await self.disconnect()
+            await self._disconnect_locked()
             raise ViarkConnectionError("receiver has no free client slot")
 
         self.use_json = self.info["use_json"]
@@ -330,10 +330,22 @@ class ViarkClient:
         self._keepalive_task = asyncio.create_task(self._keepalive_loop())
 
     async def disconnect(self) -> None:
-        # Deliberately does NOT take _connect_lock: _connect_locked() calls this on
-        # a failed login while holding it, so acquiring it here would deadlock. A
-        # disconnect racing an in-flight connect can therefore still leave the new
-        # socket open; fixing that needs an inner _disconnect_locked() helper.
+        """Close the connection and stop its background tasks.
+
+        Takes ``_connect_lock`` so it cannot interleave with a connect in flight:
+        without it, unloading the config entry mid-connect tears down a socket the
+        connect is still building, and the connect then finishes by installing a
+        live socket and two tasks that nothing will ever clean up.
+        """
+        async with self._connect_lock:
+            await self._disconnect_locked()
+
+    async def _disconnect_locked(self) -> None:
+        """Tear the connection down. The caller must hold ``_connect_lock``.
+
+        _connect_locked() calls this on its failure paths while already holding the
+        lock, which is why the public method cannot simply be reused there.
+        """
         for task in (self._keepalive_task, self._reader_task):
             if task:
                 task.cancel()

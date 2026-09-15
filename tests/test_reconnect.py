@@ -62,6 +62,13 @@ class StubReceiver:
         self.drop_next = False
         self.status_for: dict[int, int] = {}
         self.writers: list[asyncio.StreamWriter] = []
+        #: Set once a login has been read, before the reply goes out, so a test can
+        #: act while a client is provably mid-connect instead of guessing a sleep.
+        self.login_seen = asyncio.Event()
+        #: Seconds to hold the login reply back, widening that window.
+        self.login_delay = 0.0
+        #: Hang up instead of answering the login, to exercise the failure path.
+        self.refuse_login = False
 
     async def start(self) -> None:
         self.server = await asyncio.start_server(self._handle, "127.0.0.1", 0)
@@ -93,6 +100,12 @@ class StubReceiver:
         self.writers.append(writer)
         try:
             await self._read_frame(reader)  # login
+            self.login_seen.set()
+            if self.refuse_login:
+                writer.close()
+                return
+            if self.login_delay:
+                await asyncio.sleep(self.login_delay)
             writer.write(make_login_block())
             await writer.drain()
 
@@ -294,6 +307,45 @@ async def test_write_failure_does_not_orphan_its_own_future(receiver, caplog):
         assert "never retrieved" not in caplog.text, caplog.text
     finally:
         await client.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_disconnect_waits_for_an_in_flight_connect(receiver):
+    """Unloading mid-connect must not race the connect it is trying to cancel.
+
+    Without the lock, disconnect() tears down the half-built connection while
+    connect() is still in its login exchange. Either the connect then fails on a
+    socket pulled from under it, or -- if it gets further first -- it finishes by
+    installing a live socket and two background tasks *after* the disconnect has
+    returned, which nothing will ever clean up.
+    """
+    receiver.login_delay = 0.2
+    client = ViarkClient("127.0.0.1", receiver.port, timeout=5)
+
+    connecting = asyncio.create_task(client.connect())
+    await asyncio.wait_for(receiver.login_seen.wait(), timeout=5)
+
+    # The connect is provably suspended waiting for its login reply.
+    await client.disconnect()
+    await connecting  # must not raise: the disconnect waited its turn
+
+    assert client.connected is False
+    assert client._reader_task is None
+    assert client._keepalive_task is None
+
+
+@pytest.mark.asyncio
+async def test_failed_login_still_disconnects(receiver):
+    """The failure path uses _disconnect_locked(); the public one would deadlock."""
+    receiver.refuse_login = True
+    client = ViarkClient("127.0.0.1", receiver.port, timeout=5)
+
+    with pytest.raises(ViarkConnectionError):
+        await asyncio.wait_for(client.connect(), timeout=5)
+
+    assert client.connected is False
+    # The lock must have been released, or every later call would hang.
+    await asyncio.wait_for(client.disconnect(), timeout=5)
 
 
 @pytest.mark.asyncio
