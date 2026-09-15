@@ -35,7 +35,8 @@ actions that integration provides.
 - Home Assistant 2024.6 or newer.
 - The [Viark Satellite Receiver integration][integration] **1.1.0 or newer**, set up
   and working. Older versions lack the RESOL, AUDIO, TIMER, F1 and F2 keys, and
-  send CH+/CH− as the up/down arrows.
+  send CH+/CH− as the up/down arrows. Version **1.2.0** is recommended: it fixes
+  reconnection after a network drop or a receiver reboot.
 
 ## Installation
 
@@ -183,6 +184,10 @@ number for each button.
   companion app cache.
 - **"Unknown Viark key 'resolution'"** (or `audio`, `timer`, `f1`, `f2`): the
   integration is older than 1.1.0. Update it.
+- **"Receiver has no free client slot"**: the receiver accepts only a few clients
+  at once. Close the G-MScreen phone app if it is connected. If it happens after a
+  network drop or a receiver reboot, update the integration to 1.2.0, which fixes
+  a stale connection holding a slot.
 - **Buttons are greyed out**: the entity is `unavailable`. The integration cannot
   reach the receiver. In deep standby it leaves the network and cannot be woken
   over IP.
