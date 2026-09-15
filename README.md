@@ -50,6 +50,10 @@ For an on-screen remote to go with it, see the companion
 
 ## Installation
 
+Requires **Home Assistant 2025.3 or newer** — that release added
+`AddConfigEntryEntitiesCallback`, which the platforms are typed against. There are
+no external Python dependencies.
+
 ### HACS (custom repository)
 
 1. HACS → Integrations → ⋮ → **Custom repositories**
@@ -75,7 +79,8 @@ existing entry instead of creating a duplicate.
 ## Entities
 
 * **`media_player`** — power, mute, volume step, channel up/down, and
-  `select_source` over the full channel list.
+  `select_source` over the full channel list. In soft standby it reports **`off`**;
+  `idle` means powered up but reporting no channel.
 * **`remote`** — `remote.send_command` with named keys or raw codes.
 * **Diagnostic sensors** — see below.
 

@@ -65,7 +65,10 @@ def _stub_homeassistant() -> None:
     )
     module("homeassistant.helpers")
     module("homeassistant.helpers.device_registry", DeviceInfo=dict)
-    module("homeassistant.helpers.entity_platform", AddEntitiesCallback=object)
+    module(
+        "homeassistant.helpers.entity_platform",
+        AddConfigEntryEntitiesCallback=object,
+    )
 
     class _CoordinatorEntity:
         def __class_getitem__(cls, _item):

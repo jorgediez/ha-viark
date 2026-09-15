@@ -16,7 +16,7 @@ from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ViarkConfigEntry
@@ -32,7 +32,7 @@ DEFAULT_DELAY = 0.45
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ViarkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Viark remote."""
     async_add_entities([ViarkRemote(entry.runtime_data, entry)])

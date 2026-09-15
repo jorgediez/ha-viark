@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ViarkConfigEntry
@@ -46,7 +46,7 @@ KEY_INTERVAL = 0.45
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ViarkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Viark media player."""
     platform = entity_platform.async_get_current_platform()
@@ -103,8 +103,12 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
 
     @property
     def state(self) -> MediaPlayerState:
+        # OFF rather than IDLE for soft standby: IDLE means powered up with nothing
+        # playing, which is the case below when the receiver is on but reports no
+        # channel. MediaPlayerState.STANDBY was deprecated in favour of these two
+        # and is removed in HA Core 2026.8.
         if not self._state.powered_on:
-            return MediaPlayerState.STANDBY
+            return MediaPlayerState.OFF
         if self._state.current is None:
             return MediaPlayerState.IDLE
         return MediaPlayerState.PLAYING
