@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import gc
 import json
+import logging
 import struct
 import sys
 import zlib
@@ -25,6 +27,7 @@ from protocol import (  # noqa: E402
     LOGIN_MAGIC,
     ViarkClient,
     ViarkConnectionError,
+    ViarkError,
     ViarkRequestError,
 )
 
@@ -215,6 +218,80 @@ async def test_concurrent_requests_heal_a_drop_with_one_socket(receiver):
         assert receiver.connections == 2, "the drop should heal with one new socket"
         assert info[0]["ProductName"] == "VIARK SAT 4K"
         assert playing[0]["Data"] == "00001234567890"
+    finally:
+        await client.disconnect()
+
+
+class ExplodingWriter:
+    """A StreamWriter whose drain() fails, as a socket dying mid-write does.
+
+    Closing the peer is not enough to force this: TCP buffers the first write and
+    only reports the failure on a later one, which makes the timing of a real
+    socket test a coin flip. Failing at the writer keeps it deterministic and
+    exercises the same except branch.
+    """
+
+    def __init__(self, inner: asyncio.StreamWriter) -> None:
+        self._inner = inner
+
+    def write(self, data: bytes) -> None:
+        """Accept the bytes and drop them; the failure surfaces from drain()."""
+
+    async def drain(self) -> None:
+        raise ConnectionResetError("broken pipe")
+
+    def is_closing(self) -> bool:
+        return False
+
+    def close(self) -> None:
+        self._inner.close()
+
+    async def wait_closed(self) -> None:
+        with contextlib.suppress(Exception):
+            await self._inner.wait_closed()
+
+
+@pytest.mark.asyncio
+async def test_write_failure_raises_a_viark_error(receiver):
+    """Entity handlers catch ViarkError; a raw OSError would escape as a traceback."""
+    client = ViarkClient("127.0.0.1", receiver.port, timeout=5)
+    await client.connect()
+    try:
+        client._writer = ExplodingWriter(client._writer)
+
+        with pytest.raises(ViarkConnectionError) as err:
+            await client.request(15)
+        assert isinstance(err.value, ViarkError)
+
+        # The failed socket must not still look usable, or the next request is
+        # written into it and waits out its timeout instead of reconnecting.
+        assert client.connected is False
+    finally:
+        await client.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_write_failure_does_not_orphan_its_own_future(receiver, caplog):
+    """The failing request must consume the exception _fail_all() set on it.
+
+    request() registers its waiter before writing, so tearing the connection down
+    inside _write() fails that waiter too -- and this task never awaits it, having
+    raised out of _write() first. Python then reports it when the future is
+    collected, which is noise in every user's log.
+    """
+    client = ViarkClient("127.0.0.1", receiver.port, timeout=5)
+    await client.connect()
+    try:
+        client._writer = ExplodingWriter(client._writer)
+
+        with caplog.at_level(logging.ERROR, logger="asyncio"):
+            with pytest.raises(ViarkConnectionError):
+                await client.request(15)
+            # The report happens when the future is collected, not when it fails.
+            gc.collect()
+            await asyncio.sleep(0)
+
+        assert "never retrieved" not in caplog.text, caplog.text
     finally:
         await client.disconnect()
 

@@ -326,7 +326,7 @@ class ViarkClient:
             "JSON" if self.use_json else "XML",
         )
 
-        self._reader_task = asyncio.create_task(self._read_loop())
+        self._reader_task = asyncio.create_task(self._read_loop(self._reader))
         self._keepalive_task = asyncio.create_task(self._keepalive_loop())
 
     async def disconnect(self) -> None:
@@ -352,18 +352,25 @@ class ViarkClient:
 
     # -- receive --------------------------------------------------------------
 
-    async def _read_loop(self) -> None:
-        assert self._reader is not None
+    async def _read_loop(self, reader: asyncio.StreamReader) -> None:
+        """Drain replies from one socket.
+
+        Takes its reader as an argument rather than reading self._reader: the loop
+        belongs to the connection it was started for. Sharing the attribute meant a
+        teardown could null it mid-flight -- tripping an assert if the loop had not
+        run its first line yet -- and a reconnect could point an old loop at the
+        new socket.
+        """
         try:
             while True:
-                header = await self._reader.readexactly(ACK_LENGTH)
+                header = await reader.readexactly(ACK_LENGTH)
                 if header[:4] != ACK_MAGIC:
                     raise ViarkConnectionError(f"bad frame header {header[:4]!r}")
                 length, mtype, status = struct.unpack("<III", header[4:])
 
                 body = b""
                 if length:
-                    raw = await self._reader.readexactly(length)
+                    raw = await reader.readexactly(length)
                     try:
                         body = zlib.decompress(raw)
                     except zlib.error as exc:
@@ -453,8 +460,16 @@ class ViarkClient:
             await self.connect()
         assert self._writer is not None
         async with self._send_lock:
-            self._writer.write(frame(self._encode(request, fields)))
-            await self._writer.drain()
+            try:
+                self._writer.write(frame(self._encode(request, fields)))
+                await self._writer.drain()
+            except OSError as exc:
+                # Mirrors _read_loop: a socket that just failed must not still look
+                # usable, and waiters must be failed now rather than waiting out a
+                # timeout for a reply that can never arrive. ConnectionResetError
+                # and friends are OSError subclasses, so this catches them all.
+                self._handle_connection_lost(f"write failed: {exc}")
+                raise ViarkConnectionError(f"write to {self.host} failed: {exc}") from exc
 
     async def request(
         self,
@@ -484,6 +499,14 @@ class ViarkClient:
             raise ViarkError(f"timed out waiting for reply to {request}") from exc
         finally:
             self._waiters.pop(request, None)
+            # A failing _write() tears the connection down, and _fail_all() sets an
+            # exception on every waiter -- including this one, which this task then
+            # never awaits because _write() raised first. Read it back so asyncio
+            # does not report it as an unretrieved future exception. Use the local
+            # reference: _fail_all() empties _waiters, so the pop above finds
+            # nothing on exactly the path this guards against.
+            if future.done() and not future.cancelled():
+                future.exception()
 
     async def _keepalive_loop(self) -> None:
         """Hold the session open; the receiver drops idle clients."""
