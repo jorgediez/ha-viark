@@ -12,13 +12,12 @@ import {
   REPEAT_INTERVAL_MS,
   VERSION,
 } from "./const";
-import { findMediaPlayer, findViarkEntity } from "./entities";
+import { findMediaPlayer, findViarkEntity, powerState, type PowerState } from "./entities";
 import { localize } from "./localize";
 import { styles } from "./styles";
 import type { HassEntity, HomeAssistant, ViarkRemoteCardConfig } from "./types";
 import "./editor";
 
-type PowerState = "on" | "standby" | "unavailable" | "unknown";
 type HapticType = "light" | "warning" | "failure";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -96,18 +95,6 @@ export class ViarkRemoteCard extends LitElement {
     );
   }
 
-  private _powerState(entity: HassEntity, player?: HassEntity): PowerState {
-    const states = [entity.state, player?.state];
-    if (states.includes("unavailable")) {
-      return "unavailable";
-    }
-    const state = player?.state ?? entity.state;
-    if (state === "off" || state === "standby") {
-      return "standby";
-    }
-    return state === "unknown" ? "unknown" : "on";
-  }
-
   private _statusText(power: PowerState, player?: HassEntity): string {
     if (power !== "on") {
       return power === "unknown" ? "" : localize(this._lang, `status.${power}`);
@@ -133,7 +120,7 @@ export class ViarkRemoteCard extends LitElement {
 
     const playerId = this._playerId;
     const player = playerId ? this.hass.states[playerId] : undefined;
-    const power = this._powerState(entity, player);
+    const power = powerState(entity, player);
     const disabled = power === "unavailable";
     const name = this._config.name ?? DEFAULT_NAME;
     const deviceName =

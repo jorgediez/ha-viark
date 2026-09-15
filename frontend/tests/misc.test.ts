@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest";
 
 import { BUTTON_IDS } from "../src/buttons";
 import { VERSION } from "../src/const";
-import { findMediaPlayer, findViarkEntity } from "../src/entities";
+import { findMediaPlayer, findViarkEntity, powerState } from "../src/entities";
 import { TRANSLATIONS, localize } from "../src/localize";
-import type { HomeAssistant } from "../src/types";
+import type { HassEntity, HomeAssistant } from "../src/types";
 
 const hass = (entities: HomeAssistant["entities"]): HomeAssistant => ({
   states: {},
@@ -30,6 +30,30 @@ describe("entities", () => {
   it("prefers the Viark media player for the stub config", () => {
     expect(findViarkEntity(hass(registry))).toBe("media_player.viark");
     expect(findViarkEntity(hass({}))).toBeUndefined();
+  });
+});
+
+describe("powerState", () => {
+  const entity = (state: string): HassEntity => ({ entity_id: "x.y", state, attributes: {} });
+
+  it.each([
+    ["off", "standby"], // soft standby since ha-viark 1.2.0
+    ["standby", "standby"], // soft standby in ha-viark 1.1.0 and older
+    ["idle", "on"], // powered up, no channel reported
+    ["playing", "on"],
+    ["unknown", "unknown"],
+    ["unavailable", "unavailable"],
+  ])("reads media player state %s as %s", (state, expected) => {
+    expect(powerState(entity("on"), entity(state))).toBe(expected);
+  });
+
+  it("falls back to the remote entity without a media player", () => {
+    expect(powerState(entity("on"))).toBe("on");
+    expect(powerState(entity("off"))).toBe("standby");
+  });
+
+  it("is unavailable when either entity is", () => {
+    expect(powerState(entity("unavailable"), entity("playing"))).toBe("unavailable");
   });
 });
 

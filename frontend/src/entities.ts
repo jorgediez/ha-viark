@@ -1,5 +1,26 @@
 import { VIARK_DOMAIN } from "./const";
-import type { HomeAssistant } from "./types";
+import type { HassEntity, HomeAssistant } from "./types";
+
+export type PowerState = "on" | "standby" | "unavailable" | "unknown";
+
+/**
+ * Where the receiver is in its power cycle. The media player carries the richer
+ * state, so it wins over the bound entity when both are known.
+ *
+ * Soft standby is reported as `off` since ha-viark 1.2.0 and as `standby` before
+ * it; both are accepted so the card works with either. `idle` means powered up but
+ * reporting no channel, which is on.
+ */
+export function powerState(entity: HassEntity, player?: HassEntity): PowerState {
+  if (entity.state === "unavailable" || player?.state === "unavailable") {
+    return "unavailable";
+  }
+  const state = player?.state ?? entity.state;
+  if (state === "off" || state === "standby") {
+    return "standby";
+  }
+  return state === "unknown" ? "unknown" : "on";
+}
 
 /**
  * The media_player that carries channel and power state for the card's entity.
