@@ -14,7 +14,8 @@ const config = (overrides: Partial<ViarkRemoteCardConfig> = {}): ViarkRemoteCard
 });
 
 /**
- * KEY_ALIASES from custom_components/viark/const.py in jorgediez/ha-viark 1.1.0.
+ * KEY_ALIASES from custom_components/viark/const.py in jorgediez/ha-viark 1.1.0,
+ * unchanged in 1.2.0.
  * Every named key the card sends must be one the integration accepts.
  */
 const INTEGRATION_KEY_ALIASES = new Set([
