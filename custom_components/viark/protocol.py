@@ -245,6 +245,12 @@ class ViarkClient:
         # Replies are matched by type alone, so one waiter per type.
         self._waiters: dict[int, asyncio.Future[Any]] = {}
         self._send_lock = asyncio.Lock()
+        # Guards connect() itself. request() and _write() both reconnect lazily, so
+        # after a drop two callers -- a coordinator refresh and a service call, say
+        # -- can reach connect() together. Without this each opens its own socket
+        # and the loser is never closed, holding one of the receiver's few client
+        # slots until Home Assistant restarts.
+        self._connect_lock = asyncio.Lock()
 
         self.info: dict[str, Any] = {}
         self.use_json = True
@@ -258,7 +264,20 @@ class ViarkClient:
     async def connect(self) -> None:
         if self.connected:
             return
+        async with self._connect_lock:
+            # Checked again under the lock: whoever queued here while another
+            # caller was connecting must use that connection, not open a second.
+            if self.connected:
+                return
+            await self._connect_locked()
 
+    async def _connect_locked(self) -> None:
+        """Open the socket and log in. The caller must hold ``_connect_lock``.
+
+        Split out so the lock is visible in connect() rather than buried in an
+        indent. Note that this calls disconnect() on failure, which must not take
+        the lock -- see the comment there.
+        """
         # A previous session may have ended in the read loop; clear its tasks so
         # reconnecting does not leave a second keepalive running.
         for task in (self._keepalive_task, self._reader_task):
@@ -311,6 +330,10 @@ class ViarkClient:
         self._keepalive_task = asyncio.create_task(self._keepalive_loop())
 
     async def disconnect(self) -> None:
+        # Deliberately does NOT take _connect_lock: _connect_locked() calls this on
+        # a failed login while holding it, so acquiring it here would deadlock. A
+        # disconnect racing an in-flight connect can therefore still leave the new
+        # socket open; fixing that needs an inner _disconnect_locked() helper.
         for task in (self._keepalive_task, self._reader_task):
             if task:
                 task.cancel()

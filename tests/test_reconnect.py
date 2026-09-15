@@ -178,6 +178,48 @@ async def test_dropped_connection_is_reported_then_healed(receiver):
 
 
 @pytest.mark.asyncio
+async def test_concurrent_connects_open_a_single_socket(receiver):
+    """connect() must be serialised, not merely idempotent-looking.
+
+    Every caller checks self.connected and then awaits, so without a lock they all
+    pass the check before any of them assigns self._writer. Each opens a socket,
+    the last assignment wins, and the rest are leaked -- each one still holding a
+    client slot the receiver will not hand back.
+    """
+    client = ViarkClient("127.0.0.1", receiver.port, timeout=5)
+    try:
+        await asyncio.gather(*(client.connect() for _ in range(5)))
+        assert receiver.connections == 1
+        assert client.connected is True
+    finally:
+        await client.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_concurrent_requests_heal_a_drop_with_one_socket(receiver):
+    """The real-world shape: two callers reconnecting after the same drop."""
+    client = ViarkClient("127.0.0.1", receiver.port, timeout=5)
+    await client.connect()
+    try:
+        assert receiver.connections == 1
+
+        receiver.drop_next = True
+        with pytest.raises(ViarkConnectionError):
+            await client.request(15)
+        assert client.connected is False
+
+        # A coordinator refresh and a user action arriving together. Different
+        # request types, since replies are matched by type alone.
+        info, playing = await asyncio.gather(client.request(15), client.request(3))
+
+        assert receiver.connections == 2, "the drop should heal with one new socket"
+        assert info[0]["ProductName"] == "VIARK SAT 4K"
+        assert playing[0]["Data"] == "00001234567890"
+    finally:
+        await client.disconnect()
+
+
+@pytest.mark.asyncio
 async def test_notifications_are_dispatched_not_returned(receiver):
     seen: list[int] = []
     client = ViarkClient("127.0.0.1", receiver.port, on_notification=seen.append)
