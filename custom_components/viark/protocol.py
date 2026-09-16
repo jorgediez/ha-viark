@@ -580,12 +580,20 @@ class ViarkClient:
             index = stop + 1
         return out
 
-    async def playing_program_id(self) -> str | None:
-        """Ask the receiver which channel is on the TV (request 3)."""
+    async def playing_program_id(self, *, strict: bool = False) -> str | None:
+        """Ask the receiver which channel is on the TV (request 3).
+
+        Returns None both when nothing is reported and when the request fails,
+        unless ``strict`` is set, in which case a failure raises. The coordinator
+        needs the difference: the receiver refuses this request while it is in
+        the middle of changing channel.
+        """
         try:
             record = self._first(await self.request(REQ_PLAYING_CHANNEL))
         except ViarkError as exc:
             _LOGGER.debug("playing-channel request failed on %s: %s", self.host, exc)
+            if strict:
+                raise
             return None
         value = record.get("Data")
         return str(value) if value not in (None, "") else None

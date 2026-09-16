@@ -77,7 +77,7 @@ class FakeClient:
     async def channels(self, start, end):
         return CHANNELS
 
-    async def playing_program_id(self):
+    async def playing_program_id(self, *, strict=False):
         playing = self.playing
         if self._pending_switch:
             self.playing = "B"
@@ -215,3 +215,61 @@ async def test_hitting_the_limit_schedules_a_follow_up(coordinator_module, monke
     action(None)
     await tasks[0]
     assert requested == [True]
+
+
+class RefusingClient(FakeClient):
+    """Request 3 answers from a script: a ProgramId, "" or a refusal."""
+
+    def __init__(self, answers, channels) -> None:
+        super().__init__()
+        self.answers = list(answers)
+        self.listed = channels
+
+    async def state(self):
+        self.passes += 1
+        return {"ChannelNum": len(self.listed), "PowerMode": 1}
+
+    async def channels(self, start, end):
+        return self.listed
+
+    async def playing_program_id(self, *, strict=False):
+        assert strict, "the coordinator must be told about refusals"
+        answer = self.answers.pop(0)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer or None
+
+
+def refusal(coordinator_module):
+    return coordinator_module.ViarkError("request 3 failed: receiver timed out")
+
+
+# The cached list still flags the channel that was on when it was read.
+STALE_LIST = [{"ServiceID": "A", "Playing": True}, {"ServiceID": "B"}]
+
+
+async def test_a_refused_lookup_keeps_the_last_reported_channel(coordinator_module):
+    """Mid-zap the receiver refuses request 3; the stale Playing flag is wrong."""
+    client = RefusingClient(["B", refusal(coordinator_module)], STALE_LIST)
+    coordinator = make(coordinator_module, client)
+
+    assert (await coordinator._async_update_data()).current["ServiceID"] == "B"
+    assert (await coordinator._async_update_data()).current["ServiceID"] == "B"
+
+
+async def test_without_a_reported_channel_a_refusal_uses_the_flag(coordinator_module):
+    """Firmware that never answers request 3 keeps the Playing-flag fallback."""
+    client = RefusingClient([refusal(coordinator_module)] * 2, STALE_LIST)
+    coordinator = make(coordinator_module, client)
+
+    for _ in range(2):
+        assert (await coordinator._async_update_data()).current["ServiceID"] == "A"
+
+
+async def test_an_empty_answer_still_uses_the_flag(coordinator_module):
+    """Only a refusal keeps the old channel; "nothing playing" is taken as said."""
+    client = RefusingClient(["B", ""], STALE_LIST)
+    coordinator = make(coordinator_module, client)
+
+    await coordinator._async_update_data()
+    assert (await coordinator._async_update_data()).current["ServiceID"] == "A"

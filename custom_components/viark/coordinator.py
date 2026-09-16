@@ -84,6 +84,8 @@ class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
         # Set by every push, cleared when a fetch pass starts. Still set when the
         # pass ends means the state changed under it -- see _async_update_data.
         self._push_seen = False
+        # The last channel request 3 reported, kept for when it is refused.
+        self._last_reported: dict[str, Any] | None = None
 
     @callback
     def _handle_notification(self, notification: int) -> None:
@@ -166,16 +168,29 @@ class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
         self, channels: list[dict[str, Any]]
     ) -> dict[str, Any] | None:
         """Resolve the playing channel from the ProgramId request 3 returns."""
-        program_id = await self.client.playing_program_id()
-        if program_id:
-            match = next(
-                (c for c in channels if c.get("ServiceID") == program_id), None
-            )
-            if match:
-                return match
-            # Known to be playing, but not in the cached list (e.g. a radio
-            # channel while the TV list is cached). Report what little we know.
-            return {"ServiceID": program_id}
+        try:
+            program_id = await self.client.playing_program_id(strict=True)
+        except ViarkError:
+            # The receiver refuses request 3 (status 5) mid-zap. Keep what it
+            # last reported: the fallback below reads the cached list's Playing
+            # flag, which can be an hour old and name a channel long since left.
+            # The push that follows the change brings the real answer. With no
+            # earlier answer this firmware may lack request 3, so fall through.
+            if self._last_reported is not None:
+                return self._last_reported
+        else:
+            if program_id:
+                self._last_reported = self._match(channels, program_id)
+                return self._last_reported
 
         # Fall back to the per-record flag, which some firmwares set instead.
         return next((c for c in channels if c.get("Playing")), None)
+
+    @staticmethod
+    def _match(channels: list[dict[str, Any]], program_id: str) -> dict[str, Any]:
+        match = next((c for c in channels if c.get("ServiceID") == program_id), None)
+        if match:
+            return match
+        # Known to be playing, but not in the cached list (e.g. a radio channel
+        # while the TV list is cached). Report what little we know.
+        return {"ServiceID": program_id}
