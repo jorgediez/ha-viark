@@ -64,7 +64,9 @@ def _stub_homeassistant() -> None:
         BinarySensorDeviceClass=SimpleNamespace(PROBLEM="problem"),
     )
     module("homeassistant.helpers")
+    module("homeassistant.helpers.debounce", Debouncer=object)
     module("homeassistant.helpers.device_registry", DeviceInfo=dict)
+    module("homeassistant.helpers.event", async_call_later=lambda *a: None)
     module(
         "homeassistant.helpers.entity_platform",
         AddConfigEntryEntitiesCallback=object,

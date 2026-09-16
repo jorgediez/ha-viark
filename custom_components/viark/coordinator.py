@@ -18,9 +18,16 @@ from datetime import timedelta
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CHANNEL_CACHE_REFRESH_SECONDS, DOMAIN, SCAN_INTERVAL_SECONDS
+from .const import (
+    CHANNEL_CACHE_REFRESH_SECONDS,
+    DOMAIN,
+    REFRESH_COOLDOWN_SECONDS,
+    SCAN_INTERVAL_SECONDS,
+)
 from .protocol import (
     NOTIFY_CHANNEL_LIST_CHANGED,
     ViarkClient,
@@ -28,6 +35,9 @@ from .protocol import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+#: Upper bound on re-reads within one refresh (see _async_update_data).
+MAX_FETCH_PASSES = 3
 
 
 @dataclass
@@ -62,12 +72,18 @@ class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=SCAN_INTERVAL_SECONDS),
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REFRESH_COOLDOWN_SECONDS, immediate=True
+            ),
         )
         self.client = client
         client.on_notification = self._handle_notification
         self._channels: list[dict[str, Any]] = []
         self._channels_fetched_at: float = 0.0
         self._channel_count: int | None = None
+        # Set by every push, cleared when a fetch pass starts. Still set when the
+        # pass ends means the state changed under it -- see _async_update_data.
+        self._push_seen = False
 
     @callback
     def _handle_notification(self, notification: int) -> None:
@@ -80,9 +96,45 @@ class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
         if notification == NOTIFY_CHANNEL_LIST_CHANGED:
             # Force the cached list to be re-read on the next update.
             self._channels = []
+        self._push_seen = True
         self.hass.async_create_task(self.async_request_refresh())
 
     async def _async_update_data(self) -> ViarkState:
+        """Fetch the state, re-reading if a push arrived while it was being read.
+
+        Home Assistant drops a refresh request made while a refresh is running
+        rather than queuing it, so a push landing mid-fetch would otherwise be
+        lost: the pass may already have read the old channel, and nothing would
+        correct it until the next push or poll. Fast zapping hits this, since the
+        receiver sends a second 2001 about a second into each change. Re-reading
+        inside the same refresh avoids racing the lock HA still holds.
+
+        The pass limit keeps a receiver that never stops pushing from pinning the
+        refresh. Hitting it with a push still unread schedules a follow-up for
+        after the cooldown: by then this refresh has released the lock, so the
+        request is queued or run rather than dropped.
+        """
+        for attempt in range(1, MAX_FETCH_PASSES + 1):
+            self._push_seen = False
+            state = await self._async_fetch()
+            if not self._push_seen:
+                return state
+            if attempt < MAX_FETCH_PASSES:
+                _LOGGER.debug("receiver pushed during a fetch; reading again")
+
+        _LOGGER.debug(
+            "receiver still pushing after %s reads; refreshing again shortly",
+            MAX_FETCH_PASSES,
+        )
+        async_call_later(self.hass, REFRESH_COOLDOWN_SECONDS, self._async_follow_up)
+        return state
+
+    @callback
+    def _async_follow_up(self, _now: Any) -> None:
+        """Request the refresh a capped update could not make itself."""
+        self.hass.async_create_task(self.async_request_refresh())
+
+    async def _async_fetch(self) -> ViarkState:
         try:
             info = await self.client.state()
             if not info:

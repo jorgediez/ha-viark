@@ -13,6 +13,14 @@ DEFAULT_NAME: Final = "Viark receiver"
 #: backstop against a missed push.
 SCAN_INTERVAL_SECONDS: Final = 120
 
+#: Cooldown between push-triggered refreshes. Home Assistant's default is 10 s,
+#: which held a channel change back by up to that long: the receiver sends 2001
+#: twice per change (roughly a second apart), the first refresh runs at once, and
+#: everything after it waited out the cooldown -- which restarts after each fetch,
+#: so zapping kept the entity permanently behind. A short cooldown still folds a
+#: burst into an immediate refresh plus one trailing one.
+REFRESH_COOLDOWN_SECONDS: Final = 1.0
+
 #: Re-reading 1000+ channels is expensive; refresh only when the box says the list
 #: changed (notification 2002) or the cache ages out.
 CHANNEL_CACHE_REFRESH_SECONDS: Final = 3600
