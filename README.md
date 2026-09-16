@@ -33,7 +33,7 @@ For an on-screen remote to go with it, see the companion
 | Full channel list | request 0, paged and cached |
 | Satellite list | request 22 |
 | Any remote key, by name or raw code | request 1040 |
-| Push updates when the receiver changes | notifications 2001–2019 |
+| Push updates when the receiver changes, typically within a second | notifications 2001–2019 |
 | Diagnostic entities (identity, capabilities) | login block + request 15 |
 
 ### Known limits
@@ -291,9 +291,11 @@ pip install pytest pytest-asyncio pytest-timeout pyyaml
 python -m pytest tests/ -q
 ```
 
-104 tests, no hardware required. They cover framing, compact-JSON encoding, XML
+122 tests, no hardware required. They cover framing, compact-JSON encoding, XML
 encoding, login-block decoding, reply-header layout, status codes, reconnection
-against a stub receiver, the diagnostic entity definitions, source-list
+against a stub receiver (including concurrent reconnects and write failures),
+refresh pacing (the push cooldown, re-reading when the receiver pushes mid-fetch,
+and a refused channel lookup), the diagnostic entity definitions, source-list
 labelling and channel resolution, and the key table — including a guard that a
 single-source code is never presented as verified unless it has been confirmed on
 hardware, that `freeze` and `pause` never drift onto each other's code, and that
