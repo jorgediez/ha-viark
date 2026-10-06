@@ -1,12 +1,13 @@
 name: Validate
 
 # HACS and Hassfest, both required for inclusion in the HACS default list. The
-# upstream examples also run nightly to catch rule changes; this repo changes
-# rarely, so it validates on changes only. Run it by hand before a release or a
-# HACS submission to get a fresh result against the current rules.
+# weekly run catches rule changes upstream even when this repo is quiet.
 on:
   push:
+    branches: [main]
   pull_request:
+  schedule:
+    - cron: "0 4 * * 1"
   workflow_dispatch:
 
 permissions:

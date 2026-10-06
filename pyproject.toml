@@ -1,0 +1,53 @@
+[project]
+name = "ha-viark"
+version = "1.2.1"
+description = "Home Assistant integration for Viark satellite receivers"
+license = "MIT"
+requires-python = ">=3.13"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+source = ["custom_components.viark"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+  "ASYNC",
+  "B",    # bugbear
+  "BLE",  # blind except
+  "D",    # docstrings
+  "E",
+  "F",
+  "I",    # isort
+  "PL",   # pylint
+  "RUF",
+  "S",    # bandit
+  "SIM",
+  "UP",
+  "W",
+]
+ignore = [
+  "D202",
+  "D203",
+  "D213",
+  "E501",
+  "PLR0911",
+  "PLR0912",
+  "PLR2004",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "S101", "PLR0913", "PLR0917", "PLC0415", "SLF001"]
+"tools/**" = ["D", "BLE001", "S101", "T201"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+known-first-party = ["custom_components", "homeassistant"]
+combine-as-imports = true

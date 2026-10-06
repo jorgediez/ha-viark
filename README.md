@@ -287,9 +287,12 @@ python tools/make_brand_images.py               # regenerate the brand icons
 ### Tests
 
 ```bash
-pip install pytest pytest-asyncio pytest-timeout pyyaml
-python -m pytest tests/ -q
+pip install -r requirements_test.txt
+ruff check . && ruff format --check .
+pytest
 ```
+
+The Home Assistant test harness only runs on Linux and macOS. On Windows, use WSL.
 
 122 tests, no hardware required. They cover framing, compact-JSON encoding, XML
 encoding, login-block decoding, reply-header layout, status codes, reconnection

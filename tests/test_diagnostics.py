@@ -202,21 +202,18 @@ def test_every_entity_has_a_translated_name():
     """A missing translation key shows up as an ugly entity id in the UI."""
     import json
 
-    strings = json.loads((ROOT / "strings.json").read_text(encoding="utf-8"))
-    english = json.loads(
+    named = json.loads(
         (ROOT / "translations" / "en.json").read_text(encoding="utf-8")
-    )
+    )["entity"]
 
-    for source, label in ((strings, "strings.json"), (english, "en.json")):
-        named = source["entity"]
-        for description in sensor.SENSORS:
-            assert description.translation_key in named["sensor"], (
-                f"{description.key} missing from {label}"
-            )
-        for description in binary_sensor.BINARY_SENSORS:
-            assert description.translation_key in named["binary_sensor"], (
-                f"{description.key} missing from {label}"
-            )
+    for description in sensor.SENSORS:
+        assert description.translation_key in named["sensor"], (
+            f"{description.key} missing from en.json"
+        )
+    for description in binary_sensor.BINARY_SENSORS:
+        assert description.translation_key in named["binary_sensor"], (
+            f"{description.key} missing from en.json"
+        )
 
 
 def test_every_entity_has_an_icon():
@@ -260,7 +257,9 @@ def test_no_orphaned_translations():
     """Names left behind after an entity is removed should not linger."""
     import json
 
-    named = json.loads((ROOT / "strings.json").read_text(encoding="utf-8"))["entity"]
+    named = json.loads(
+        (ROOT / "translations" / "en.json").read_text(encoding="utf-8")
+    )["entity"]
     assert set(named["sensor"]) == {d.translation_key for d in sensor.SENSORS}
     assert set(named["binary_sensor"]) == {
         d.translation_key for d in binary_sensor.BINARY_SENSORS
