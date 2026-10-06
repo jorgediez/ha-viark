@@ -6,7 +6,6 @@ Used to discover the wire format of responses that are not zlib-compressed.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import json
 import os
 import socket
@@ -61,7 +60,7 @@ def main() -> int:
     try:
         while sock.recv(65536):
             break
-    except socket.timeout:
+    except TimeoutError:
         pass
 
     if args.json:
@@ -80,7 +79,7 @@ def main() -> int:
     while time.time() < deadline:
         try:
             data = sock.recv(65536)
-        except socket.timeout:
+        except TimeoutError:
             continue
         if not data:
             print("  (closed by box)")

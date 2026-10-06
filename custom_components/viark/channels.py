@@ -27,7 +27,7 @@ def label_width(channel_count: int) -> int:
 
 
 def on_screen_number(channel: dict[str, Any]) -> int | None:
-    """The number shown on the TV, which counts from 1, not 0."""
+    """Return the number shown on the TV, which counts from 1, not 0."""
     index = channel.get("ServiceIndex")
     return index + 1 if isinstance(index, int) else None
 

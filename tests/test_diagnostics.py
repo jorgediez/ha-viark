@@ -6,9 +6,9 @@ value functions and the registry metadata rather than the entity plumbing.
 
 from __future__ import annotations
 
-import sys
 from dataclasses import dataclass
 from pathlib import Path
+import sys
 from types import ModuleType, SimpleNamespace
 
 import pytest

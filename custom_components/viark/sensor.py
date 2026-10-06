@@ -183,6 +183,7 @@ class ViarkSensor(CoordinatorEntity[ViarkCoordinator], SensorEntity):
         entry: ViarkConfigEntry,
         description: ViarkSensorDescription,
     ) -> None:
+        """Initialise from the shared coordinator and a description."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
@@ -190,5 +191,6 @@ class ViarkSensor(CoordinatorEntity[ViarkCoordinator], SensorEntity):
 
     @property
     def native_value(self) -> Any:
+        """Read the value from the login block and the latest state."""
         state = self.coordinator.data.info if self.coordinator.data else {}
         return self.entity_description.value_fn(self.coordinator.client.info, state)

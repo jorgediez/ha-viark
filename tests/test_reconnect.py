@@ -12,10 +12,10 @@ import contextlib
 import gc
 import json
 import logging
+from pathlib import Path
 import struct
 import sys
 import zlib
-from pathlib import Path
 
 import pytest
 
@@ -45,10 +45,7 @@ def make_login_block(use_json: bool = True) -> bytes:
 
 
 def reply(mtype: int, payload=None, status: int = 0) -> bytes:
-    if payload is None:
-        body = b""
-    else:
-        body = zlib.compress(json.dumps(payload).encode())
+    body = b"" if payload is None else zlib.compress(json.dumps(payload).encode())
     return b"GCDH" + struct.pack("<III", len(body), mtype, status) + body
 
 

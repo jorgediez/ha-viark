@@ -26,14 +26,15 @@ Summary:
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import contextlib
 import json
 import logging
 import socket
 import struct
-import zlib
-from typing import Any, Callable
+from typing import Any
 from xml.etree import ElementTree
+import zlib
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,6 +107,7 @@ class ViarkRequestError(ViarkError):
     """The receiver rejected a request with a non-zero status."""
 
     def __init__(self, request: int, status: int) -> None:
+        """Record which request failed and why."""
         self.request = request
         self.status = status
         detail = STATUS_MESSAGES.get(status, f"status {status}")
@@ -137,10 +139,9 @@ def parse_login_block(block: bytes) -> dict[str, Any]:
     serial_raw = plain[12:20]
     flags_a = plain[84]
     return {
-        "serial": "%06d%06d"
-        % (
-            int.from_bytes(serial_raw[0:3], "big"),
-            int.from_bytes(serial_raw[3:6], "big"),
+        "serial": (
+            f"{int.from_bytes(serial_raw[0:3], 'big'):06d}"
+            f"{int.from_bytes(serial_raw[3:6], 'big'):06d}"
         ),
         # NUL-terminated, and this firmware pads it with a trailing newline.
         "model": plain[20:52].split(b"\0")[0].decode("ascii", "replace").strip(),
@@ -179,7 +180,9 @@ def _clean(value: Any) -> Any:
 
 def _parse_xml_records(body: bytes) -> list[dict[str, Any]]:
     """Flatten an XML reply into the same shape the JSON parser produces."""
-    root = ElementTree.fromstring(body.decode("utf-8", "replace"))
+    # The reply comes from a receiver the user configured on their own network, and
+    # the expat bundled with Python 3.13+ refuses entity-expansion attacks.
+    root = ElementTree.fromstring(body.decode("utf-8", "replace"))  # noqa: S314
     records = [{child.tag: child.text for child in parm} for parm in root.iter("parm")]
     if records:
         return records
@@ -199,10 +202,8 @@ async def async_discover(timeout: float = 6.0) -> dict[str, dict[str, Any]]:
         def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
             if len(data) != LOGIN_BLOCK_LENGTH:
                 return
-            try:
+            with contextlib.suppress(ViarkError):
                 found[addr[0]] = parse_login_block(data)
-            except ViarkError:
-                pass
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -230,6 +231,7 @@ class ViarkClient:
         client_uuid: str = "home-assistant-viark",
         on_notification: Callable[[int], None] | None = None,
     ) -> None:
+        """Prepare a client; nothing connects until connect() is called."""
         self.host = host
         self.port = port
         self.timeout = timeout
@@ -257,11 +259,13 @@ class ViarkClient:
 
     @property
     def connected(self) -> bool:
+        """Return whether the control socket is open."""
         return self._writer is not None and not self._writer.is_closing()
 
     # -- connection -----------------------------------------------------------
 
     async def connect(self) -> None:
+        """Open the control connection and log in, unless already connected."""
         if self.connected:
             return
         async with self._connect_lock:
@@ -292,7 +296,7 @@ class ViarkClient:
             self._reader, self._writer = await asyncio.wait_for(
                 asyncio.open_connection(self.host, self.port), timeout=self.timeout
             )
-        except (OSError, asyncio.TimeoutError) as exc:
+        except (TimeoutError, OSError) as exc:
             raise ViarkConnectionError(
                 f"cannot connect to {self.host}:{self.port}: {exc}"
             ) from exc
@@ -308,7 +312,7 @@ class ViarkClient:
             block = await asyncio.wait_for(
                 self._reader.readexactly(LOGIN_BLOCK_LENGTH), timeout=self.timeout
             )
-        except (OSError, asyncio.IncompleteReadError, asyncio.TimeoutError) as exc:
+        except (TimeoutError, OSError, asyncio.IncompleteReadError) as exc:
             await self._disconnect_locked()
             raise ViarkConnectionError(f"login failed: {exc}") from exc
 
@@ -511,7 +515,7 @@ class ViarkClient:
         try:
             await self._write(request, fields)
             return await asyncio.wait_for(future, timeout=timeout or self.timeout)
-        except asyncio.TimeoutError as exc:
+        except TimeoutError as exc:
             raise ViarkError(f"timed out waiting for reply to {request}") from exc
         finally:
             self._waiters.pop(request, None)
@@ -562,6 +566,7 @@ class ViarkClient:
         return self._first(await self.request(REQ_STB_INFO))
 
     async def satellites(self) -> list[dict[str, Any]]:
+        """Return the satellites configured on the receiver."""
         result = await self.request(REQ_SATELLITE_LIST)
         return result if isinstance(result, list) else []
 
@@ -605,6 +610,7 @@ class ViarkClient:
         return str(value) if value not in (None, "") else None
 
     async def mute_state(self) -> bool | None:
+        """Return whether the receiver is muted, or None if it won't say."""
         try:
             record = self._first(await self.request(REQ_MUTE_STATE))
         except ViarkError:
@@ -636,8 +642,10 @@ class ViarkClient:
         await self.request(REQ_POWER, expect_reply=False)
 
     async def __aenter__(self) -> ViarkClient:
+        """Connect on entering the context."""
         await self.connect()
         return self
 
     async def __aexit__(self, *exc_info: object) -> None:
+        """Disconnect on leaving the context."""
         await self.disconnect()

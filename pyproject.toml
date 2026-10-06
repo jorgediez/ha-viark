@@ -45,7 +45,19 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "S101", "PLR0913", "PLR0917", "PLC0415", "SLF001"]
-"tools/**" = ["D", "BLE001", "S101", "T201"]
+# A self-contained client library: timeout is part of its API, the constructor
+# takes optional settings, and asserts narrow types after a lazy connect.
+"custom_components/**/protocol.py" = ["ASYNC109", "PLR0913", "PLR0917", "S101"]
+# Interactive command-line tools for working against real hardware.
+"tools/**" = [
+  "ASYNC240",
+  "BLE001",
+  "D",
+  "PLC0415",
+  "PLR0915",
+  "S101",
+  "T201",
+]
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true

@@ -13,9 +13,9 @@ Needs a virtualenv with Home Assistant installed, which is not part of the repo:
 from __future__ import annotations
 
 import importlib
+from pathlib import Path
 import sys
 import traceback
-from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -41,7 +41,7 @@ def main() -> int:
     for name in MODULES:
         try:
             importlib.import_module(name)
-        except Exception as exc:  # noqa: BLE001 - reporting tool
+        except Exception as exc:
             failures += 1
             print(f"  [FAIL] {name}: {type(exc).__name__}: {exc}")
             traceback.print_exc()

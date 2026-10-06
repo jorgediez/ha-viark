@@ -9,8 +9,8 @@ The PNG header is parsed directly, so these tests need no imaging library.
 
 from __future__ import annotations
 
-import struct
 from pathlib import Path
+import struct
 
 import pytest
 

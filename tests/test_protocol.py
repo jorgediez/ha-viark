@@ -8,10 +8,10 @@ and are easy to regress.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import struct
 import sys
 import zlib
-from pathlib import Path
 
 import pytest
 
@@ -35,7 +35,6 @@ from protocol import (  # noqa: E402
     frame,
     parse_login_block,
 )
-
 
 # --- framing ---------------------------------------------------------------
 

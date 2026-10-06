@@ -14,14 +14,14 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
-import sys
 from pathlib import Path
+import sys
 
 sys.path.insert(
     0, str(Path(__file__).resolve().parents[1] / "custom_components" / "viark")
 )
 
-from protocol import ViarkClient, ViarkError  # noqa: E402
+from protocol import ViarkClient, ViarkError
 
 #: Receiver address. Set VIARK_HOST, or pass --host explicitly.
 DEFAULT_HOST = os.environ.get("VIARK_HOST")

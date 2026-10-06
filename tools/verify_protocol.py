@@ -10,14 +10,14 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
-import sys
 from pathlib import Path
+import sys
 
 sys.path.insert(
     0, str(Path(__file__).resolve().parents[1] / "custom_components" / "viark")
 )
 
-from protocol import (  # noqa: E402
+from protocol import (
     REQ_MUTE_STATE,
     REQ_PLAYING_CHANNEL,
     REQ_STB_INFO,
