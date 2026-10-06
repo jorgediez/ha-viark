@@ -95,7 +95,9 @@ class StubReceiver:
             return {"request": "998"}
         return json.loads(text)
 
-    async def _handle(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+    async def _handle(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ) -> None:
         self.connections += 1
         self.writers.append(writer)
         try:

@@ -154,7 +154,9 @@ class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
         return ViarkState(info=info, channels=channels, current=current, muted=muted)
 
     async def _async_channels(self, count: int) -> list[dict[str, Any]]:
-        stale = (time.monotonic() - self._channels_fetched_at) > CHANNEL_CACHE_REFRESH_SECONDS
+        stale = (
+            time.monotonic() - self._channels_fetched_at
+        ) > CHANNEL_CACHE_REFRESH_SECONDS
         if self._channels and count == self._channel_count and not stale:
             return self._channels
 

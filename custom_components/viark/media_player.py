@@ -229,7 +229,9 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
         try:
             await self.coordinator.client.power_toggle()
         except ViarkError as exc:
-            raise HomeAssistantError(f"Viark receiver refused the power command: {exc}") from exc
+            raise HomeAssistantError(
+                f"Viark receiver refused the power command: {exc}"
+            ) from exc
         await self.coordinator.async_request_refresh()
 
     async def async_select_source(self, source: str) -> None:

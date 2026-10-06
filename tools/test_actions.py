@@ -17,7 +17,9 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "custom_components" / "viark"))
+sys.path.insert(
+    0, str(Path(__file__).resolve().parents[1] / "custom_components" / "viark")
+)
 
 from protocol import ViarkClient, ViarkError  # noqa: E402
 
@@ -42,9 +44,7 @@ async def test_switch(client: ViarkClient, target_index: int) -> bool:
     start_id = await client.playing_program_id()
     print(f"  before: {await name_of(client, start_id, channels)}")
 
-    target = next(
-        (c for c in channels if c.get("ServiceIndex") == target_index), None
-    )
+    target = next((c for c in channels if c.get("ServiceIndex") == target_index), None)
     if not target or target.get("ServiceID") == start_id:
         print("  cannot pick a distinct target channel; skipping")
         return False
@@ -96,13 +96,19 @@ async def test_mute(client: ViarkClient) -> bool:
 
 async def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--host", default=DEFAULT_HOST, required=DEFAULT_HOST is None,
-                    help="receiver IP address (or set VIARK_HOST)")
+    ap.add_argument(
+        "--host",
+        default=DEFAULT_HOST,
+        required=DEFAULT_HOST is None,
+        help="receiver IP address (or set VIARK_HOST)",
+    )
     ap.add_argument("--target-index", type=int, default=52)
     args = ap.parse_args()
 
     async with ViarkClient(args.host) as client:
-        print(f"connected: {client.info['model']} platform {client.info['platform_id']}")
+        print(
+            f"connected: {client.info['model']} platform {client.info['platform_id']}"
+        )
         switched = await test_switch(client, args.target_index)
         muted = await test_mute(client)
 

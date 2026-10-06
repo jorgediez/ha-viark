@@ -130,7 +130,9 @@ def parse_login_block(block: bytes) -> dict[str, Any]:
         )
     plain = deobfuscate(block)
     if plain[:12] != LOGIN_MAGIC:
-        raise ViarkConnectionError("login block magic mismatch; not a G-MScreen receiver")
+        raise ViarkConnectionError(
+            "login block magic mismatch; not a G-MScreen receiver"
+        )
 
     serial_raw = plain[12:20]
     flags_a = plain[84]
@@ -178,9 +180,7 @@ def _clean(value: Any) -> Any:
 def _parse_xml_records(body: bytes) -> list[dict[str, Any]]:
     """Flatten an XML reply into the same shape the JSON parser produces."""
     root = ElementTree.fromstring(body.decode("utf-8", "replace"))
-    records = [
-        {child.tag: child.text for child in parm} for parm in root.iter("parm")
-    ]
+    records = [{child.tag: child.text for child in parm} for parm in root.iter("parm")]
     if records:
         return records
     return [{child.tag: child.text for child in root}]
@@ -299,7 +299,7 @@ class ViarkClient:
 
         # Login is always XML: the data format is only known once it replies.
         login = (
-            f"{XML_DECL}<Command request=\"{REQ_LOGIN}\">"
+            f'{XML_DECL}<Command request="{REQ_LOGIN}">'
             f"<data>{self.client_name}</data><uuid>{self.client_uuid}</uuid></Command>"
         )
         try:
@@ -386,7 +386,9 @@ class ViarkClient:
                     try:
                         body = zlib.decompress(raw)
                     except zlib.error as exc:
-                        _LOGGER.warning("undecompressable body for type %s: %s", mtype, exc)
+                        _LOGGER.warning(
+                            "undecompressable body for type %s: %s", mtype, exc
+                        )
                         body = b""
 
                 self._dispatch(mtype, status, body)
@@ -481,7 +483,9 @@ class ViarkClient:
                 # timeout for a reply that can never arrive. ConnectionResetError
                 # and friends are OSError subclasses, so this catches them all.
                 self._handle_connection_lost(f"write failed: {exc}")
-                raise ViarkConnectionError(f"write to {self.host} failed: {exc}") from exc
+                raise ViarkConnectionError(
+                    f"write to {self.host} failed: {exc}"
+                ) from exc
 
     async def request(
         self,
@@ -561,7 +565,9 @@ class ViarkClient:
         result = await self.request(REQ_SATELLITE_LIST)
         return result if isinstance(result, list) else []
 
-    async def channels(self, start: int = 0, end: int | None = None) -> list[dict[str, Any]]:
+    async def channels(
+        self, start: int = 0, end: int | None = None
+    ) -> list[dict[str, Any]]:
         """Fetch channel records, paging within the 100-record limit."""
         if end is None:
             info = await self.state()

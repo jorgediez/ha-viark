@@ -48,7 +48,9 @@ def _stub_homeassistant() -> None:
         device_class: str | None = None
 
     module("homeassistant")
-    module("homeassistant.const", EntityCategory=SimpleNamespace(DIAGNOSTIC="diagnostic"))
+    module(
+        "homeassistant.const", EntityCategory=SimpleNamespace(DIAGNOSTIC="diagnostic")
+    )
     module("homeassistant.core", HomeAssistant=object, callback=lambda f: f)
     module("homeassistant.components")
     module(
@@ -100,7 +102,9 @@ import importlib.util  # noqa: E402
 
 
 def _load(name: str):
-    spec = importlib.util.spec_from_file_location(f"viark_pkg.{name}", ROOT / f"{name}.py")
+    spec = importlib.util.spec_from_file_location(
+        f"viark_pkg.{name}", ROOT / f"{name}.py"
+    )
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -178,9 +182,7 @@ def test_sensor_keys_are_unique():
 
 def test_obscure_identifiers_are_disabled_by_default():
     """Noisy identifiers should not clutter a fresh install."""
-    disabled = {
-        d.key for d in sensor.SENSORS if not d.entity_registry_enabled_default
-    }
+    disabled = {d.key for d in sensor.SENSORS if not d.entity_registry_enabled_default}
     assert {"cpu_chip_id", "flash_id", "satip_mode", "client_type"} <= disabled
 
     enabled = {d.key for d in sensor.SENSORS if d.entity_registry_enabled_default}
@@ -202,9 +204,9 @@ def test_every_entity_has_a_translated_name():
     """A missing translation key shows up as an ugly entity id in the UI."""
     import json
 
-    named = json.loads(
-        (ROOT / "translations" / "en.json").read_text(encoding="utf-8")
-    )["entity"]
+    named = json.loads((ROOT / "translations" / "en.json").read_text(encoding="utf-8"))[
+        "entity"
+    ]
 
     for description in sensor.SENSORS:
         assert description.translation_key in named["sensor"], (
@@ -257,9 +259,9 @@ def test_no_orphaned_translations():
     """Names left behind after an entity is removed should not linger."""
     import json
 
-    named = json.loads(
-        (ROOT / "translations" / "en.json").read_text(encoding="utf-8")
-    )["entity"]
+    named = json.loads((ROOT / "translations" / "en.json").read_text(encoding="utf-8"))[
+        "entity"
+    ]
     assert set(named["sensor"]) == {d.translation_key for d in sensor.SENSORS}
     assert set(named["binary_sensor"]) == {
         d.translation_key for d in binary_sensor.BINARY_SENSORS

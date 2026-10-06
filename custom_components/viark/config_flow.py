@@ -103,7 +103,9 @@ class ViarkConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Viark discovery unavailable: %s", exc)
             return None
 
-        configured = {entry.data.get(CONF_HOST) for entry in self._async_current_entries()}
+        configured = {
+            entry.data.get(CONF_HOST) for entry in self._async_current_entries()
+        }
         for host in found:
             if host not in configured:
                 return host

@@ -19,7 +19,9 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "custom_components" / "viark"))
+sys.path.insert(
+    0, str(Path(__file__).resolve().parents[1] / "custom_components" / "viark")
+)
 
 from const import KEY_ALIASES  # noqa: E402
 from protocol import ViarkClient, async_discover  # noqa: E402
@@ -59,8 +61,12 @@ async def current(client: ViarkClient) -> dict | None:
 
 async def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", default=DEFAULT_HOST, required=DEFAULT_HOST is None,
-                        help="receiver IP address (or set VIARK_HOST)")
+    parser.add_argument(
+        "--host",
+        default=DEFAULT_HOST,
+        required=DEFAULT_HOST is None,
+        help="receiver IP address (or set VIARK_HOST)",
+    )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("info")
@@ -99,15 +105,19 @@ async def main() -> int:
         if not found:
             print("  no receivers broadcast (they announce every few seconds)")
         for ip, info in found.items():
-            print(f"  {ip}  {info['model']}  serial {info['serial']}  "
-                  f"platform {info['platform_id']}  "
-                  f"{'JSON' if info['use_json'] else 'XML'}")
+            print(
+                f"  {ip}  {info['model']}  serial {info['serial']}  "
+                f"platform {info['platform_id']}  "
+                f"{'JSON' if info['use_json'] else 'XML'}"
+            )
         return 0
 
     async with ViarkClient(args.host, client_name="viark-cli") as client:
-        print(f"connected: {client.info['model']} "
-              f"(platform {client.info['platform_id']}, "
-              f"{'JSON' if client.use_json else 'XML'})\n")
+        print(
+            f"connected: {client.info['model']} "
+            f"(platform {client.info['platform_id']}, "
+            f"{'JSON' if client.use_json else 'XML'})\n"
+        )
 
         if args.cmd == "info":
             for key, value in (await client.state()).items():
@@ -129,15 +139,20 @@ async def main() -> int:
 
         elif args.cmd == "tune":
             target = next(
-                (c for c in await client.channels()
-                 if c.get("ServiceName") == args.name),
+                (
+                    c
+                    for c in await client.channels()
+                    if c.get("ServiceName") == args.name
+                ),
                 None,
             )
             if not target:
                 print(f"  no channel named {args.name!r}")
                 return 1
             print(f"  tuning to {describe(target)}")
-            await client.switch_channel(target["ServiceID"], int(target.get("Radio", 0)))
+            await client.switch_channel(
+                target["ServiceID"], int(target.get("Radio", 0))
+            )
             await asyncio.sleep(3.0)
             print("  now:", describe(await current(client)))
 

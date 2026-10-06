@@ -67,8 +67,10 @@ def main() -> int:
     print("config flow, entity classes and key resolution all import cleanly")
     print(f"  media_player features: {ViarkMediaPlayer._attr_supported_features}")
     print(f"  remote entity name:    {ViarkRemote._attr_name}")
-    print(f"  diagnostic sensors:    {len(SENSORS)} "
-          f"({sum(d.entity_registry_enabled_default for d in SENSORS)} enabled by default)")
+    print(
+        f"  diagnostic sensors:    {len(SENSORS)} "
+        f"({sum(d.entity_registry_enabled_default for d in SENSORS)} enabled by default)"
+    )
     print(f"  binary sensors:        {len(BINARY_SENSORS)}")
     return 0
 
