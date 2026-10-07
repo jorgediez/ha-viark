@@ -6,8 +6,11 @@ protocol, and receivers on other platforms are known to behave differently.
 
 ## Reporting a receiver, or a problem
 
-Open an [issue](https://github.com/jorgediez/ha-viark/issues/new/choose). There
-is a form for bugs and one for telling us how the integration does on your
+The [community thread](https://community.home-assistant.io/t/viark-satellite-receivers-and-other-g-mscreen-boxes-local-control-integration/1025250)
+is the easiest place for questions, and for "it works on my receiver" or "it
+behaves oddly". Bugs are better as an
+[issue](https://github.com/jorgediez/ha-viark/issues/new/choose), where there is
+a form for bugs and one for telling us how the integration does on your
 receiver.
 
 What makes a report actionable:

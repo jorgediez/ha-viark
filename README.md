@@ -410,7 +410,8 @@ icon, with no orphans left behind when one is removed.
 Reports from receiver models other than the SAT 4K are the most useful thing
 you can send, and some remote key codes still need someone to press them on
 real hardware. See [CONTRIBUTING.md](CONTRIBUTING.md) for both, and for how to
-work on the code.
+work on the code. Questions, and how it does on your receiver, are welcome in
+the [Home Assistant community thread][community].
 
 ## Disclaimer
 
@@ -431,6 +432,7 @@ trademarks belong to their respective owners. Use at your own risk.
 [MIT](LICENSE)
 
 [remote-card]: https://github.com/jorgediez/ha-viark-remote-card
+[community]: https://community.home-assistant.io/t/viark-satellite-receivers-and-other-g-mscreen-boxes-local-control-integration/1025250
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg
 [hacs-url]: https://github.com/hacs/integration
 [release-badge]: https://img.shields.io/github/v/release/jorgediez/ha-viark
