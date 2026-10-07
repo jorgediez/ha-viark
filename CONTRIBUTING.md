@@ -23,6 +23,9 @@ What makes a report actionable:
   `custom_components.viark: debug` in your `logger` settings. See
   [Troubleshooting](README.md#troubleshooting).
 
+A security problem should not go in an issue or the thread: see
+[SECURITY.md](SECURITY.md) for how to report it privately.
+
 ## Mapping remote keys
 
 Key codes 25, 27, 28, 40, 41, 46–53, 56, 66–68 and 71–82 appear in only one of
