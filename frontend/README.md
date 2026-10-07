@@ -207,6 +207,7 @@ npm run typecheck
 npm run lint        # ESLint
 npm run format      # Prettier; format:check only reports
 npm test
+npm run coverage    # tests with a coverage report
 npm run demo        # http://localhost:5000, with a mocked Home Assistant
 ```
 
