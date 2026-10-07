@@ -1,6 +1,7 @@
 # Viark Satellite Receiver — Home Assistant integration
 
 [![hacs][hacs-badge]][hacs-url]
+[![tests][tests-badge]][tests-url]
 [![license][license-badge]](LICENSE)
 
 Local control of **Viark** satellite receivers from Home Assistant, over the
@@ -335,6 +336,8 @@ reports a platform id, and behaviour is known to vary by platform.
 [remote-card]: https://github.com/jorgediez/ha-viark-remote-card
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg
 [hacs-url]: https://github.com/hacs/integration
+[tests-badge]: https://github.com/jorgediez/ha-viark/actions/workflows/tests.yml/badge.svg
+[tests-url]: https://github.com/jorgediez/ha-viark/actions/workflows/tests.yml
 [license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [brands]: https://github.com/home-assistant/brands
 [gabonator]: https://gist.github.com/gabonator/2c8885127cf6e0954c24e5d698ff99b6

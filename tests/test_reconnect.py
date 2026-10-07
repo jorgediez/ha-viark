@@ -31,6 +31,10 @@ from protocol import (  # noqa: E402
     ViarkRequestError,
 )
 
+# The Home Assistant test harness blocks sockets; the stub receiver needs a real
+# one, bound to 127.0.0.1, which the harness allows once sockets are enabled.
+pytestmark = pytest.mark.usefixtures("socket_enabled")
+
 
 def make_login_block(use_json: bool = True) -> bytes:
     plain = bytearray(LOGIN_BLOCK_LENGTH)
