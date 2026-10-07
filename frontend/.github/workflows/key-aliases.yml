@@ -1,0 +1,25 @@
+name: Key names
+
+# The card sends keys by name, and the names belong to ha-viark. This compares
+# the card's copy with the integration's current table every week, and before a
+# release. Not on pull requests: a change upstream should not fail an unrelated
+# one here.
+on:
+  schedule:
+    - cron: "30 4 * * 1"
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: In step with ha-viark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: node scripts/check-key-aliases.mjs

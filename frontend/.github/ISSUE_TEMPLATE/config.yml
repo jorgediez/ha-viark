@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: The receiver or the integration
+    url: https://github.com/jorgediez/ha-viark/issues
+    about: Connection problems, keys the integration doesn't know, and anything about the receiver itself.

@@ -33,11 +33,12 @@ actions that integration provides.
 
 ## Requirements
 
-- Home Assistant 2024.6 or newer.
+- Home Assistant 2025.3 or newer, which the integration needs.
 - The [Viark Satellite Receiver integration][integration] **1.1.0 or newer**, set up
   and working. Older versions lack the RESOL, AUDIO, TIMER, F1 and F2 keys, and
-  send CH+/CH− as the up/down arrows. Version **1.2.0** is recommended: it fixes
-  reconnection after a network drop or a receiver reboot.
+  send CH+/CH− as the up/down arrows. Version **1.3.0** is recommended: 1.2.0
+  fixes reconnection after a network drop or a receiver reboot, and 1.3.0 names
+  every entity after the receiver on Home Assistant 2025.3.
 
 ## Installation
 
@@ -174,17 +175,18 @@ buttons:
     action: none
 ```
 
-The integration repository includes `tools/map_keys_guided.py`, which steps
-through the unverified key codes on a live receiver and helps find the right
-number for each button.
+The integration repository includes [`scripts/map_keys_guided.py`][map-keys],
+which steps through the unverified key codes on a live receiver and helps find the
+right number for each button.
 
 ## Troubleshooting
 
 - **"Custom element doesn't exist: viark-remote-card"**: the resource is not
   loaded. Check **Settings → Dashboards → Resources**, then clear the browser or
   companion app cache.
-- **"Unknown Viark key 'resolution'"** (or `audio`, `timer`, `f1`, `f2`): the
-  integration is older than 1.1.0. Update it.
+- **'Unknown Viark key "resolution"'** (or `audio`, `timer`, `f1`, `f2`; older
+  integrations quote the key as `'resolution'`): the integration is older than
+  1.1.0. Update it.
 - **"Receiver has no free client slot"**: the receiver accepts only a few clients
   at once. Close the G-MScreen phone app if it is connected. If it happens after a
   network drop or a receiver reboot, update the integration to 1.2.0, which fixes
@@ -209,6 +211,7 @@ npm run format      # Prettier; format:check only reports
 npm test
 npm run coverage    # tests with a coverage report
 npm run demo        # http://localhost:5000, with a mocked Home Assistant
+node scripts/check-key-aliases.mjs   # key names still match ha-viark's
 ```
 
 To try it in Home Assistant, copy `dist/ha-viark-remote-card.js` to `config/www/` and
@@ -219,16 +222,23 @@ add it as a resource, as in [manual installation](#manual).
 1. Bump `version` in `package.json` and `VERSION` in `src/const.ts`. A test
    checks they match.
 2. Publish a GitHub release tagged `vX.Y.Z`.
-3. The **Release** workflow checks the tag matches `package.json`, runs the tests
-   and HACS validation against the tagged code, then builds the card and attaches
-   `ha-viark-remote-card.js`, which is the file HACS installs. If a check fails,
-   nothing is attached: fix it and publish a new patch release.
+3. The **Release** workflow checks the tag matches `package.json`, runs the tests,
+   HACS validation and the key-name check against the tagged code, then builds the
+   card and attaches `ha-viark-remote-card.js`, which is the file HACS installs. If
+   a check fails, nothing is attached: fix it and publish a new patch release.
 
-## Trademark
+## Contributing
 
-This is a community project, not affiliated with or endorsed by Viark. The card
-imitates the remote's button layout. The name at the bottom is plain text, not the
-Viark logo.
+Issues and pull requests are welcome. Problems with the receiver itself, or with
+keys the integration does not know yet, belong in the
+[integration's repository][integration]. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Disclaimer
+
+This is an unofficial, community project. It is not affiliated with or endorsed
+by Viark or any other brand mentioned here. All trademarks belong to their
+respective owners. The card imitates the remote's button layout; the name at the
+bottom is plain text, not the Viark logo. Use at your own risk.
 
 ## License
 
@@ -236,6 +246,7 @@ Viark logo.
 
 [integration]: https://github.com/jorgediez/ha-viark
 [card-mod]: https://github.com/thomasloven/lovelace-card-mod
+[map-keys]: https://github.com/jorgediez/ha-viark/blob/main/scripts/map_keys_guided.py
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg
 [hacs-url]: https://github.com/hacs/integration
 [release-badge]: https://img.shields.io/github/v/release/jorgediez/ha-viark-remote-card
