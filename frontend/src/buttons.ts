@@ -23,9 +23,7 @@ import {
  * - `none`: the integration has no verified key for this button yet.
  */
 export type ButtonAction =
-  | { type: "key"; key: string }
-  | { type: "power" }
-  | { type: "none" };
+  { type: "key"; key: string } | { type: "power" } | { type: "none" };
 
 export interface ButtonDef {
   /** Printed label; "\n" splits it over two lines. */

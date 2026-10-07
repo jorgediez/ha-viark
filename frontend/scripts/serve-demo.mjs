@@ -5,7 +5,11 @@ import { extname, join, normalize, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const port = Number(process.env.PORT ?? 5000);
-const types = { ".html": "text/html", ".js": "text/javascript", ".map": "application/json" };
+const types = {
+  ".html": "text/html",
+  ".js": "text/javascript",
+  ".map": "application/json",
+};
 
 createServer((req, res) => {
   const path = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
@@ -14,6 +18,8 @@ createServer((req, res) => {
     res.writeHead(404).end("Not found");
     return;
   }
-  res.writeHead(200, { "Content-Type": types[extname(file)] ?? "application/octet-stream" });
+  res.writeHead(200, {
+    "Content-Type": types[extname(file)] ?? "application/octet-stream",
+  });
   createReadStream(file).pipe(res);
 }).listen(port, () => console.log(`Demo: http://localhost:${port}/`));

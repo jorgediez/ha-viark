@@ -388,7 +388,10 @@ export const styles = css`
     padding: 4cqi 3cqi;
     border-radius: 5cqi;
     background-color: #141517;
-    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 0.25cqi, transparent 0.4cqi);
+    background-image: radial-gradient(
+      rgba(255, 255, 255, 0.05) 0.25cqi,
+      transparent 0.4cqi
+    );
     background-size: 2cqi 2cqi;
     box-shadow:
       inset 0 0.6cqi 1.5cqi rgba(0, 0, 0, 0.6),

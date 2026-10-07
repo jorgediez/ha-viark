@@ -49,7 +49,8 @@ async function ensureHaForm(): Promise<void> {
   try {
     const helpers = await window.loadCardHelpers?.();
     const card = await helpers?.createCardElement({ type: "button" });
-    const ctor = card?.constructor as { getConfigElement?: () => Promise<unknown> } | undefined;
+    const ctor = card?.constructor as
+      { getConfigElement?: () => Promise<unknown> } | undefined;
     await ctor?.getConfigElement?.();
   } catch {
     // Older frontends: ha-form is already available inside the card editor dialog.
@@ -100,7 +101,8 @@ export class ViarkRemoteCardEditor extends LitElement {
     `;
   }
 
-  private _computeLabel = (item: SchemaItem): string => localize(this._lang, `editor.${item.name}`);
+  private _computeLabel = (item: SchemaItem): string =>
+    localize(this._lang, `editor.${item.name}`);
 
   private _computeHelper = (item: SchemaItem): string | undefined =>
     item.name === "name" ? localize(this._lang, "editor.name_helper") : undefined;
@@ -118,7 +120,11 @@ export class ViarkRemoteCardEditor extends LitElement {
       delete config.name;
     }
     this.dispatchEvent(
-      new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }),
+      new CustomEvent("config-changed", {
+        detail: { config },
+        bubbles: true,
+        composed: true,
+      }),
     );
   }
 }

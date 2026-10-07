@@ -19,17 +19,23 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 export const entityDomain = (entityId: string): string => entityId.split(".", 1)[0];
 
 /** Throws a readable error, shown by Home Assistant in place of the card. */
-export function validateConfig(config: unknown): asserts config is ViarkRemoteCardConfig {
+export function validateConfig(
+  config: unknown,
+): asserts config is ViarkRemoteCardConfig {
   if (!isObject(config)) {
     throw new Error("Invalid configuration.");
   }
   const { entity, name, buttons } = config;
 
   if (typeof entity !== "string" || !entity) {
-    throw new Error("Set 'entity' to the media_player or remote entity of your Viark receiver.");
+    throw new Error(
+      "Set 'entity' to the media_player or remote entity of your Viark receiver.",
+    );
   }
   if (!ENTITY_DOMAINS.includes(entityDomain(entity))) {
-    throw new Error(`'entity' must be a media_player or remote entity, got '${entity}'.`);
+    throw new Error(
+      `'entity' must be a media_player or remote entity, got '${entity}'.`,
+    );
   }
   if (name !== undefined && typeof name !== "string") {
     throw new Error("'name' must be text.");
@@ -47,7 +53,9 @@ export function validateConfig(config: unknown): asserts config is ViarkRemoteCa
   }
   for (const [id, override] of Object.entries(buttons)) {
     if (!isButtonId(id)) {
-      throw new Error(`Unknown button '${id}'. Valid buttons: ${BUTTON_IDS.join(", ")}.`);
+      throw new Error(
+        `Unknown button '${id}'. Valid buttons: ${BUTTON_IDS.join(", ")}.`,
+      );
     }
     validateOverride(id, override);
   }
@@ -58,9 +66,13 @@ function validateOverride(id: string, override: unknown): void {
   if (!isObject(override)) {
     throw new Error(`'${where}' must be a mapping.`);
   }
-  const kinds = ["key", "perform_action", "action"].filter((k) => override[k] !== undefined);
+  const kinds = ["key", "perform_action", "action"].filter(
+    (k) => override[k] !== undefined,
+  );
   if (kinds.length !== 1) {
-    throw new Error(`'${where}' needs exactly one of 'key', 'perform_action' or 'action: none'.`);
+    throw new Error(
+      `'${where}' needs exactly one of 'key', 'perform_action' or 'action: none'.`,
+    );
   }
 
   const { key, perform_action, action, data, target } = override;
@@ -96,12 +108,20 @@ function validateOverride(id: string, override: unknown): void {
 export function keyCall(entityId: string, key: string): ServiceCall {
   const target = { entity_id: entityId };
   if (entityDomain(entityId) === "remote") {
-    return { domain: "remote", service: "send_command", data: { command: key }, target };
+    return {
+      domain: "remote",
+      service: "send_command",
+      data: { command: key },
+      target,
+    };
   }
   return { domain: VIARK_DOMAIN, service: "send_key", data: { key }, target };
 }
 
-export function resolveAction(id: ButtonId, config: ViarkRemoteCardConfig): ResolvedAction {
+export function resolveAction(
+  id: ButtonId,
+  config: ViarkRemoteCardConfig,
+): ResolvedAction {
   const override: ButtonOverride | undefined = config.buttons?.[id];
   if (override) {
     if (override.action === "none") {
@@ -115,7 +135,10 @@ export function resolveAction(id: ButtonId, config: ViarkRemoteCardConfig): Reso
       };
     }
     if (override.key !== undefined) {
-      return { type: "call", call: keyCall(config.entity, String(override.key).trim()) };
+      return {
+        type: "call",
+        call: keyCall(config.entity, String(override.key).trim()),
+      };
     }
   }
 

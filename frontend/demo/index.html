@@ -79,8 +79,16 @@
           },
         },
         entities: {
-          "media_player.viark_sat_4k": { entity_id: "media_player.viark_sat_4k", device_id: "d1", platform: "viark" },
-          "remote.viark_sat_4k_remote": { entity_id: "remote.viark_sat_4k_remote", device_id: "d1", platform: "viark" },
+          "media_player.viark_sat_4k": {
+            entity_id: "media_player.viark_sat_4k",
+            device_id: "d1",
+            platform: "viark",
+          },
+          "remote.viark_sat_4k_remote": {
+            entity_id: "remote.viark_sat_4k_remote",
+            device_id: "d1",
+            platform: "viark",
+          },
         },
         callService: async (domain, service, data, target) => {
           write(`${domain}.${service} ${JSON.stringify({ data, target })}`);
@@ -89,18 +97,29 @@
 
       const card = document.createElement("viark-remote-card");
       const params = new URLSearchParams(location.search);
-      const config = { type: "custom:viark-remote-card", entity: "media_player.viark_sat_4k" };
+      const config = {
+        type: "custom:viark-remote-card",
+        entity: "media_player.viark_sat_4k",
+      };
       if (params.get("lang")) hass.language = params.get("lang");
       card.setConfig(config);
       card.hass = hass;
       document.getElementById("card").append(card);
 
-      window.addEventListener("hass-notification", (ev) => write(`toast: ${ev.detail.message}`));
+      window.addEventListener("hass-notification", (ev) =>
+        write(`toast: ${ev.detail.message}`),
+      );
       window.addEventListener("haptic", (ev) => console.debug("haptic", ev.detail));
 
       for (const button of document.querySelectorAll("[data-state]")) {
         button.addEventListener("click", () => {
-          hass = { ...hass, states: { ...hass.states, "media_player.viark_sat_4k": player(button.dataset.state) } };
+          hass = {
+            ...hass,
+            states: {
+              ...hass.states,
+              "media_player.viark_sat_4k": player(button.dataset.state),
+            },
+          };
           card.hass = hass;
         });
       }

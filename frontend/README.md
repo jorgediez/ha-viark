@@ -203,6 +203,8 @@ npm install
 npm run build       # dist/ha-viark-remote-card.js
 npm run watch       # rebuild on change
 npm run typecheck
+npm run lint        # ESLint
+npm run format      # Prettier; format:check only reports
 npm test
 npm run demo        # http://localhost:5000, with a mocked Home Assistant
 ```
