@@ -295,10 +295,12 @@ pytest
 
 The Home Assistant test harness only runs on Linux and macOS. On Windows, use WSL.
 
-122 tests, no hardware required. They cover framing, compact-JSON encoding, XML
-encoding, login-block decoding, reply-header layout, status codes, reconnection
-against a stub receiver (including concurrent reconnects and write failures),
-refresh pacing (the push cooldown, re-reading when the receiver pushes mid-fetch,
+No hardware required. The integration is exercised inside Home Assistant against
+a mocked receiver: the config flow (discovery, a receiver that moved address),
+setup, retry and unload, and every entity and action. Below that they cover
+framing, compact-JSON encoding, XML encoding, login-block decoding, reply-header
+layout, status codes, the client's requests, reconnection against a stub receiver
+(including concurrent reconnects and write failures), refresh pacing (the push cooldown, re-reading when the receiver pushes mid-fetch,
 and a refused channel lookup), the diagnostic entity definitions, source-list
 labelling and channel resolution, and the key table — including a guard that a
 single-source code is never presented as verified unless it has been confirmed on

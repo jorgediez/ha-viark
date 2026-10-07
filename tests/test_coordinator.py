@@ -1,50 +1,25 @@
 """Refresh pacing of the coordinator.
 
-Loads coordinator.py against a throwaway Home Assistant stub that records what the
-coordinator hands to DataUpdateCoordinator, so the debouncer settings can be
-checked without a full HA install.
+Drives the coordinator's update directly, against a scripted client, so the
+debouncer settings and the re-read logic can be checked without the timing of a
+real refresh.
 """
 
 from __future__ import annotations
 
-import importlib.util
-from pathlib import Path
-import sys
-from types import ModuleType, SimpleNamespace
+from collections.abc import Generator
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1] / "custom_components" / "viark"
+from custom_components.viark.const import REFRESH_COOLDOWN_SECONDS
+from custom_components.viark.coordinator import MAX_FETCH_PASSES, ViarkCoordinator
+from custom_components.viark.protocol import ViarkError
+from homeassistant.core import HomeAssistant
 
 #: Home Assistant's own default, which left channel changes up to 10 s behind.
 HA_DEFAULT_COOLDOWN = 10
-
-
-class _Debouncer:
-    def __init__(self, hass, logger, *, cooldown, immediate, function=None):
-        self.cooldown = cooldown
-        self.immediate = immediate
-        self.function = function
-
-
-class _DataUpdateCoordinator:
-    def __class_getitem__(cls, _item):
-        return cls
-
-    def __init__(self, hass, logger, **kwargs):
-        self.hass = hass
-        self.kwargs = kwargs
-
-    async def async_request_refresh(self) -> None:
-        """Never awaited here; the tests drive _async_update_data directly."""
-
-
-class _Hass:
-    def __init__(self) -> None:
-        self.later: list[tuple[float, object]] = []
-
-    def async_create_task(self, coro):
-        coro.close()
 
 
 CHANNELS = [{"ServiceID": "A"}, {"ServiceID": "B"}]
@@ -89,61 +64,27 @@ class FakeClient:
 
 
 @pytest.fixture
-def coordinator_module(monkeypatch):
-    """Import coordinator.py with stubs that vanish after the test.
+def call_later() -> Generator[MagicMock]:
+    """Capture follow-up refreshes the coordinator schedules."""
+    with patch("custom_components.viark.coordinator.async_call_later") as call_later:
+        yield call_later
 
-    monkeypatch restores sys.modules, so the stubs in test_diagnostics (which
-    skip themselves if "homeassistant" is already present) are unaffected.
+
+def make(hass: HomeAssistant, client) -> ViarkCoordinator:
+    """Build a coordinator whose refresh requests are recorded, not run.
+
+    The tests call _async_update_data themselves; a refresh started by a push
+    in the middle of one would run a second update alongside it.
     """
-
-    def module(name: str, **attrs) -> ModuleType:
-        mod = ModuleType(name)
-        for key, value in attrs.items():
-            setattr(mod, key, value)
-        monkeypatch.setitem(sys.modules, name, mod)
-        return mod
-
-    module("homeassistant")
-    module("homeassistant.core", HomeAssistant=object, callback=lambda f: f)
-    module("homeassistant.helpers")
-    module("homeassistant.helpers.debounce", Debouncer=_Debouncer)
-    module(
-        "homeassistant.helpers.event",
-        async_call_later=lambda hass, delay, action: hass.later.append((delay, action)),
-    )
-    module(
-        "homeassistant.helpers.update_coordinator",
-        DataUpdateCoordinator=_DataUpdateCoordinator,
-        UpdateFailed=Exception,
-    )
-
-    pkg = module("viark_coord_pkg")
-    pkg.__path__ = [str(ROOT)]
-
-    def load(name: str) -> ModuleType:
-        spec = importlib.util.spec_from_file_location(
-            f"viark_coord_pkg.{name}", ROOT / f"{name}.py"
-        )
-        mod = importlib.util.module_from_spec(spec)
-        monkeypatch.setitem(sys.modules, spec.name, mod)
-        spec.loader.exec_module(mod)
-        return mod
-
-    load("const")
-    load("protocol")
-    return load("coordinator")
+    coordinator = ViarkCoordinator(hass, client)
+    coordinator.async_request_refresh = AsyncMock()
+    return coordinator
 
 
-def make(coordinator_module, client):
-    return coordinator_module.ViarkCoordinator(_Hass(), client)
+async def test_push_refreshes_use_a_short_cooldown(hass: HomeAssistant) -> None:
+    coordinator = ViarkCoordinator(hass, SimpleNamespace(on_notification=None))
 
-
-def test_push_refreshes_use_a_short_cooldown(coordinator_module):
-    client = SimpleNamespace(on_notification=None)
-    coordinator = make(coordinator_module, client)
-
-    debouncer = coordinator.kwargs.get("request_refresh_debouncer")
-    assert debouncer is not None, "falling back to HA's default debouncer"
+    debouncer = coordinator._debounced_refresh
     # The receiver sends 2001 about a second apart per channel change; a cooldown
     # much longer than that is what made the entity lag the TV.
     assert debouncer.cooldown <= 2
@@ -152,69 +93,70 @@ def test_push_refreshes_use_a_short_cooldown(coordinator_module):
     assert debouncer.immediate is True
 
 
-def test_notifications_are_wired_to_the_coordinator(coordinator_module):
+async def test_notifications_are_wired_to_the_coordinator(
+    hass: HomeAssistant,
+) -> None:
     client = SimpleNamespace(on_notification=None)
-    coordinator = make(coordinator_module, client)
+    coordinator = ViarkCoordinator(hass, client)
     assert client.on_notification == coordinator._handle_notification
 
 
-async def test_a_quiet_fetch_reads_once(coordinator_module):
+async def test_a_quiet_fetch_reads_once(
+    hass: HomeAssistant, call_later: MagicMock
+) -> None:
     client = FakeClient()
-    coordinator = make(coordinator_module, client)
+    coordinator = make(hass, client)
     state = await coordinator._async_update_data()
     assert client.passes == 1
     assert state.current == {"ServiceID": "A"}
-    assert coordinator.hass.later == []
+    call_later.assert_not_called()
 
 
-async def test_a_push_during_a_fetch_is_not_lost(coordinator_module):
+async def test_a_push_during_a_fetch_is_not_lost(
+    hass: HomeAssistant, call_later: MagicMock
+) -> None:
     """HA drops refresh requests made mid-refresh, so the coordinator re-reads.
 
     Without the re-read the result would be the channel read before the switch,
     and it would stay that way until the next push or the 2-minute poll.
     """
     client = FakeClient(push_during_fetch=1)
-    coordinator = make(coordinator_module, client)
+    coordinator = make(hass, client)
     state = await coordinator._async_update_data()
     assert client.passes == 2
     assert state.current == {"ServiceID": "B"}
     # Settled within the pass limit, so no follow-up is needed.
-    assert coordinator.hass.later == []
+    call_later.assert_not_called()
 
 
-async def test_re_reads_are_bounded(coordinator_module):
+@pytest.mark.usefixtures("call_later")
+async def test_re_reads_are_bounded(hass: HomeAssistant) -> None:
     client = FakeClient(push_during_fetch=100)
-    await make(coordinator_module, client)._async_update_data()
-    assert client.passes == coordinator_module.MAX_FETCH_PASSES
+    await make(hass, client)._async_update_data()
+    assert client.passes == MAX_FETCH_PASSES
 
 
-async def test_hitting_the_limit_schedules_a_follow_up(coordinator_module, monkeypatch):
+async def test_hitting_the_limit_schedules_a_follow_up(
+    hass: HomeAssistant, call_later: MagicMock
+) -> None:
     """A push read on the last pass must not be dropped with it.
 
     A refresh requested from inside the update is discarded by HA, so the
     follow-up is deferred past the cooldown, when the lock is free.
     """
-    limit = coordinator_module.MAX_FETCH_PASSES
-    client = FakeClient(push_during_fetch=limit)
-    coordinator = make(coordinator_module, client)
+    client = FakeClient(push_during_fetch=MAX_FETCH_PASSES)
+    coordinator = make(hass, client)
     await coordinator._async_update_data()
 
-    assert client.passes == limit
-    assert len(coordinator.hass.later) == 1
-    delay, action = coordinator.hass.later[0]
-    assert delay >= coordinator_module.REFRESH_COOLDOWN_SECONDS
+    assert client.passes == MAX_FETCH_PASSES
+    call_later.assert_called_once()
+    _, delay, action = call_later.call_args.args
+    assert delay >= REFRESH_COOLDOWN_SECONDS
 
-    requested = []
-
-    async def request_refresh():
-        requested.append(True)
-
-    monkeypatch.setattr(coordinator, "async_request_refresh", request_refresh)
-    tasks = []
-    monkeypatch.setattr(coordinator.hass, "async_create_task", tasks.append)
+    requested = coordinator.async_request_refresh.await_count
     action(None)
-    await tasks[0]
-    assert requested == [True]
+    await hass.async_block_till_done()
+    assert coordinator.async_request_refresh.await_count == requested + 1
 
 
 class RefusingClient(FakeClient):
@@ -240,36 +182,40 @@ class RefusingClient(FakeClient):
         return answer or None
 
 
-def refusal(coordinator_module):
-    return coordinator_module.ViarkError("request 3 failed: receiver timed out")
+def refusal() -> ViarkError:
+    return ViarkError("request 3 failed: receiver timed out")
 
 
 # The cached list still flags the channel that was on when it was read.
 STALE_LIST = [{"ServiceID": "A", "Playing": True}, {"ServiceID": "B"}]
 
 
-async def test_a_refused_lookup_keeps_the_last_reported_channel(coordinator_module):
+async def test_a_refused_lookup_keeps_the_last_reported_channel(
+    hass: HomeAssistant,
+) -> None:
     """Mid-zap the receiver refuses request 3; the stale Playing flag is wrong."""
-    client = RefusingClient(["B", refusal(coordinator_module)], STALE_LIST)
-    coordinator = make(coordinator_module, client)
+    client = RefusingClient(["B", refusal()], STALE_LIST)
+    coordinator = make(hass, client)
 
     assert (await coordinator._async_update_data()).current["ServiceID"] == "B"
     assert (await coordinator._async_update_data()).current["ServiceID"] == "B"
 
 
-async def test_without_a_reported_channel_a_refusal_uses_the_flag(coordinator_module):
+async def test_without_a_reported_channel_a_refusal_uses_the_flag(
+    hass: HomeAssistant,
+) -> None:
     """Firmware that never answers request 3 keeps the Playing-flag fallback."""
-    client = RefusingClient([refusal(coordinator_module)] * 2, STALE_LIST)
-    coordinator = make(coordinator_module, client)
+    client = RefusingClient([refusal()] * 2, STALE_LIST)
+    coordinator = make(hass, client)
 
     for _ in range(2):
         assert (await coordinator._async_update_data()).current["ServiceID"] == "A"
 
 
-async def test_an_empty_answer_still_uses_the_flag(coordinator_module):
+async def test_an_empty_answer_still_uses_the_flag(hass: HomeAssistant) -> None:
     """Only a refusal keeps the old channel; "nothing playing" is taken as said."""
     client = RefusingClient(["B", ""], STALE_LIST)
-    coordinator = make(coordinator_module, client)
+    coordinator = make(hass, client)
 
     await coordinator._async_update_data()
     assert (await coordinator._async_update_data()).current["ServiceID"] == "A"

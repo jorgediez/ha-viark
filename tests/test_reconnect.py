@@ -12,17 +12,12 @@ import contextlib
 import gc
 import json
 import logging
-from pathlib import Path
 import struct
-import sys
 import zlib
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1] / "custom_components" / "viark"
-sys.path.insert(0, str(ROOT))
-
-from protocol import (  # noqa: E402
+from custom_components.viark.protocol import (
     LOGIN_BLOCK_LENGTH,
     LOGIN_MAGIC,
     ViarkClient,

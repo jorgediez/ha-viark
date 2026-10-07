@@ -1,8 +1,7 @@
 """Guard against Home Assistant APIs that are scheduled for removal.
 
-These are source scans rather than imports: the integration modules pull in
-``homeassistant.*``, which the rest of the suite deliberately avoids so the tests
-run without a Home Assistant install.
+These are source scans rather than imports, so they also catch uses on code
+paths the other tests do not reach.
 
 A deprecated API keeps working until its removal release, so the cost of missing
 one is not a broken build -- it is a warning in every user's log until the day the
