@@ -14,3 +14,13 @@ updates:
     groups:
       npm:
         patterns: ["*"]
+    ignore:
+      # typescript-eslint supports TypeScript below 6.1. Newer versions cannot be
+      # installed alongside it, which fails the whole update run. Raise or drop
+      # this once typescript-eslint's peer range allows them.
+      - dependency-name: typescript
+        versions: [">=6.1.0"]
+      # Node's type definitions follow the Node major CI runs (setup-node in the
+      # workflows), not the newest release.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
