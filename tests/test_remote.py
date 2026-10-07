@@ -96,12 +96,20 @@ async def test_send_command_resolves_names_and_raw_codes(
     assert sleeps.await_args_list == [call(1)] * 5
 
 
-@pytest.mark.parametrize("command", ["warp_speed", "-1"])
+@pytest.mark.parametrize(
+    ("command", "error"),
+    [("warp_speed", "unknown_key"), ("-1", "negative_key")],
+)
 async def test_send_command_rejects_bad_keys_before_sending(
-    hass: HomeAssistant, mock_client: MagicMock, entity_id: str, command: str
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    entity_id: str,
+    command: str,
+    error: str,
 ) -> None:
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as raised:
         await send_command(hass, entity_id, **{ATTR_COMMAND: ["mute", command]})
+    assert raised.value.translation_key == error
     mock_client.send_key.assert_not_awaited()
 
 

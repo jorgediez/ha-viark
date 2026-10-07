@@ -17,11 +17,8 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ViarkConfigEntry
 from .channels import build_labels, format_label, label_width, resolve
 from .const import (
     ATTR_KEY,
@@ -34,7 +31,8 @@ from .const import (
     KEY_VOLUME_UP,
     SERVICE_SEND_KEY,
 )
-from .coordinator import ViarkCoordinator, ViarkState
+from .coordinator import ViarkConfigEntry, ViarkCoordinator, ViarkState
+from .entity import ViarkEntity
 from .protocol import ViarkError
 from .remote import resolve_key
 
@@ -42,6 +40,10 @@ _LOGGER = logging.getLogger(__name__)
 
 #: The receiver drops keys sent back to back without a gap.
 KEY_INTERVAL = 0.45
+
+# Commands share one connection, and the receiver drops keys sent too close
+# together.
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -61,13 +63,12 @@ async def async_setup_entry(
         },
         "async_send_key",
     )
-    async_add_entities([ViarkMediaPlayer(entry.runtime_data, entry)])
+    async_add_entities([ViarkMediaPlayer(entry.runtime_data)])
 
 
-class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
+class ViarkMediaPlayer(ViarkEntity, MediaPlayerEntity):
     """Represents the receiver as a TV-style media player."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = (
@@ -80,20 +81,9 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
     )
 
-    def __init__(self, coordinator: ViarkCoordinator, entry: ViarkConfigEntry) -> None:
-        """Initialise and describe the receiver as a device."""
-        super().__init__(coordinator)
-        self._attr_unique_id = entry.entry_id
-        login = coordinator.client.info
-        info = coordinator.data.info if coordinator.data else {}
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="Viark",
-            model=info.get("ProductName") or login.get("model") or "Viark receiver",
-            name=info.get("ProductName") or login.get("model") or "Viark receiver",
-            sw_version=info.get("SoftwareVersion"),
-            serial_number=info.get("SerialNumber") or login.get("serial"),
-        )
+    def __init__(self, coordinator: ViarkCoordinator) -> None:
+        """Initialise from the shared coordinator."""
+        super().__init__(coordinator, None)
 
     @property
     def _state(self) -> ViarkState:
@@ -183,7 +173,11 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
                     await asyncio.sleep(KEY_INTERVAL)
                 await self.coordinator.client.send_key(key)
         except ViarkError as exc:
-            raise HomeAssistantError(f"Viark receiver rejected the key: {exc}") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="key_rejected",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
         await self.coordinator.async_request_refresh()
 
     async def async_send_key(self, key: str, repeat: int = 1) -> None:
@@ -237,7 +231,9 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
             await self.coordinator.client.power_toggle()
         except ViarkError as exc:
             raise HomeAssistantError(
-                f"Viark receiver refused the power command: {exc}"
+                translation_domain=DOMAIN,
+                translation_key="power_refused",
+                translation_placeholders={"error": str(exc)},
             ) from exc
         await self.coordinator.async_request_refresh()
 
@@ -250,11 +246,19 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
         """
         target = resolve(source, self._state.channels)
         if target is None:
-            raise ServiceValidationError(f"Unknown Viark channel: {source}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_channel",
+                translation_placeholders={"source": source},
+            )
 
         program_id = target.get("ServiceID")
         if not program_id:
-            raise HomeAssistantError(f"Channel {source} has no usable id")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="channel_without_id",
+                translation_placeholders={"source": source},
+            )
 
         try:
             await self.coordinator.client.switch_channel(
@@ -263,6 +267,10 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
         except ViarkError as exc:
             # The receiver refuses to retune while a menu is open or the channel
             # is being recorded; both come back as a non-zero status.
-            raise HomeAssistantError(f"Could not tune to {source}: {exc}") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="tune_failed",
+                translation_placeholders={"source": source, "error": str(exc)},
+            ) from exc
 
         await self.coordinator.async_request_refresh()

@@ -12,13 +12,27 @@
           "host": "The receiver's IP address, for example 192.168.1.50.",
           "port": "The control port. Leave at 20000 unless you have changed it."
         }
+      },
+      "reconfigure": {
+        "title": "Change the receiver's address",
+        "description": "Enter the new address of your Viark receiver. It must be powered on or in soft standby.",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "The receiver's IP address, for example 192.168.1.50.",
+          "port": "The control port. Leave at 20000 unless you have changed it."
+        }
       }
     },
     "error": {
       "cannot_connect": "Could not talk to a Viark receiver at that address. Check the IP, make sure the receiver is not in deep standby, and confirm port 20000 is reachable."
     },
     "abort": {
-      "already_configured": "This receiver is already configured."
+      "already_configured": "This receiver is already configured.",
+      "reconfigure_successful": "The receiver's address has been updated.",
+      "wrong_device": "That address belongs to a different receiver. To add it, set it up as a new device instead."
     }
   },
   "entity": {
@@ -76,6 +90,43 @@
       "satellite_menu": {
         "name": "Satellite menu"
       }
+    },
+    "remote": {
+      "remote": {
+        "name": "Remote"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot reach the Viark receiver at {host}: {error}"
+    },
+    "update_failed": {
+      "message": "Error talking to the Viark receiver: {error}"
+    },
+    "no_state": {
+      "message": "The Viark receiver returned no state."
+    },
+    "key_rejected": {
+      "message": "The Viark receiver rejected the key: {error}"
+    },
+    "power_refused": {
+      "message": "The Viark receiver refused the power command: {error}"
+    },
+    "unknown_channel": {
+      "message": "Unknown Viark channel: {source}"
+    },
+    "channel_without_id": {
+      "message": "Channel {source} has no usable id."
+    },
+    "tune_failed": {
+      "message": "Could not tune to {source}: {error}"
+    },
+    "unknown_key": {
+      "message": "Unknown Viark key \"{key}\". Use a raw key code number or one of: {keys}"
+    },
+    "negative_key": {
+      "message": "Key code must not be negative: \"{key}\""
     }
   },
   "services": {

@@ -282,10 +282,12 @@ async def test_select_source_tunes_directly(
 async def test_an_unknown_source_is_rejected(
     hass: HomeAssistant, mock_client: MagicMock, entity_id: str
 ) -> None:
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as raised:
         await call_service(
             hass, SERVICE_SELECT_SOURCE, entity_id, **{ATTR_INPUT_SOURCE: "Nope TV"}
         )
+    assert raised.value.translation_key == "unknown_channel"
+    assert raised.value.translation_placeholders == {"source": "Nope TV"}
     mock_client.switch_channel.assert_not_awaited()
 
 

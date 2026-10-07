@@ -15,18 +15,20 @@ from typing import Any
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ViarkConfigEntry
 from .const import DOMAIN, KEY_ALIASES
-from .coordinator import ViarkCoordinator
+from .coordinator import ViarkConfigEntry, ViarkCoordinator
+from .entity import ViarkEntity
 from .protocol import ViarkError
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DELAY = 0.45
+
+# Commands share one connection, and the receiver drops keys sent too close
+# together.
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -35,15 +37,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Viark remote."""
-    async_add_entities([ViarkRemote(entry.runtime_data, entry)])
+    async_add_entities([ViarkRemote(entry.runtime_data)])
 
 
 def resolve_key(command: str) -> int:
     """Turn a command into a raw key code.
 
-    Accepts a known alias ("mute", "digit_7"), a bare digit ("7"), or a raw key
-    code. Codes that only one of the two reference clients documents are not
-    aliased, but can still be sent as raw numbers.
+    Accepts a known alias ("mute", "digit_7") or a raw key code. A bare number
+    is always a raw code: "7" sends code 7, not the 7 key, which is "digit_7".
+    Codes that only one of the two reference clients documents are not aliased,
+    but can still be sent as raw numbers.
     """
     key = command.strip().lower()
     if key in KEY_ALIASES:
@@ -52,25 +55,30 @@ def resolve_key(command: str) -> int:
         value = int(key)
     except ValueError:
         raise ServiceValidationError(
-            f"Unknown Viark key {command!r}. Use a raw key code number or one of: "
-            f"{', '.join(sorted(KEY_ALIASES))}"
+            translation_domain=DOMAIN,
+            translation_key="unknown_key",
+            translation_placeholders={
+                "key": command,
+                "keys": ", ".join(sorted(KEY_ALIASES)),
+            },
         ) from None
     if value < 0:
-        raise ServiceValidationError(f"Key code must not be negative: {command!r}")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="negative_key",
+            translation_placeholders={"key": command},
+        )
     return value
 
 
-class ViarkRemote(CoordinatorEntity[ViarkCoordinator], RemoteEntity):
+class ViarkRemote(ViarkEntity, RemoteEntity):
     """Sends raw remote key codes to the receiver."""
 
-    _attr_has_entity_name = True
-    _attr_name = "Remote"
+    _attr_translation_key = "remote"
 
-    def __init__(self, coordinator: ViarkCoordinator, entry: ViarkConfigEntry) -> None:
+    def __init__(self, coordinator: ViarkCoordinator) -> None:
         """Initialise from the shared coordinator."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_remote"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry.entry_id)})
+        super().__init__(coordinator, "remote")
 
     @property
     def is_on(self) -> bool:
@@ -95,7 +103,9 @@ class ViarkRemote(CoordinatorEntity[ViarkCoordinator], RemoteEntity):
             await self.coordinator.client.power_toggle()
         except ViarkError as exc:
             raise HomeAssistantError(
-                f"Viark receiver refused the power command: {exc}"
+                translation_domain=DOMAIN,
+                translation_key="power_refused",
+                translation_placeholders={"error": str(exc)},
             ) from exc
         await self.coordinator.async_request_refresh()
 
@@ -114,6 +124,10 @@ class ViarkRemote(CoordinatorEntity[ViarkCoordinator], RemoteEntity):
                     first = False
                     await self.coordinator.client.send_key(code)
         except ViarkError as exc:
-            raise HomeAssistantError(f"Viark receiver rejected the key: {exc}") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="key_rejected",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
 
         await self.coordinator.async_request_refresh()

@@ -22,13 +22,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ViarkConfigEntry
-from .const import DOMAIN
-from .coordinator import ViarkCoordinator
+from .coordinator import ViarkConfigEntry, ViarkCoordinator
+from .entity import ViarkEntity
+
+# Read-only: every value comes from the coordinator.
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -166,28 +166,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Viark diagnostic sensors."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        ViarkSensor(coordinator, entry, description) for description in SENSORS
-    )
+    async_add_entities(ViarkSensor(coordinator, description) for description in SENSORS)
 
 
-class ViarkSensor(CoordinatorEntity[ViarkCoordinator], SensorEntity):
+class ViarkSensor(ViarkEntity, SensorEntity):
     """A read-only value describing the receiver."""
 
-    _attr_has_entity_name = True
     entity_description: ViarkSensorDescription
 
     def __init__(
         self,
         coordinator: ViarkCoordinator,
-        entry: ViarkConfigEntry,
         description: ViarkSensorDescription,
     ) -> None:
         """Initialise from the shared coordinator and a description."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry.entry_id)})
 
     @property
     def native_value(self) -> Any:

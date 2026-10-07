@@ -12,8 +12,9 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.viark.const import REFRESH_COOLDOWN_SECONDS
+from custom_components.viark.const import DOMAIN, REFRESH_COOLDOWN_SECONDS
 from custom_components.viark.coordinator import MAX_FETCH_PASSES, ViarkCoordinator
 from custom_components.viark.protocol import ViarkError
 from homeassistant.core import HomeAssistant
@@ -70,19 +71,24 @@ def call_later() -> Generator[MagicMock]:
         yield call_later
 
 
+def coordinator_for(hass: HomeAssistant, client) -> ViarkCoordinator:
+    """Build a coordinator for a client, with a config entry of its own."""
+    return ViarkCoordinator(hass, MockConfigEntry(domain=DOMAIN), client)
+
+
 def make(hass: HomeAssistant, client) -> ViarkCoordinator:
     """Build a coordinator whose refresh requests are recorded, not run.
 
     The tests call _async_update_data themselves; a refresh started by a push
     in the middle of one would run a second update alongside it.
     """
-    coordinator = ViarkCoordinator(hass, client)
+    coordinator = coordinator_for(hass, client)
     coordinator.async_request_refresh = AsyncMock()
     return coordinator
 
 
 async def test_push_refreshes_use_a_short_cooldown(hass: HomeAssistant) -> None:
-    coordinator = ViarkCoordinator(hass, SimpleNamespace(on_notification=None))
+    coordinator = coordinator_for(hass, SimpleNamespace(on_notification=None))
 
     debouncer = coordinator._debounced_refresh
     # The receiver sends 2001 about a second apart per channel change; a cooldown
@@ -97,7 +103,7 @@ async def test_notifications_are_wired_to_the_coordinator(
     hass: HomeAssistant,
 ) -> None:
     client = SimpleNamespace(on_notification=None)
-    coordinator = ViarkCoordinator(hass, client)
+    coordinator = coordinator_for(hass, client)
     assert client.on_notification == coordinator._handle_notification
 
 
