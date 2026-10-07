@@ -1,11 +1,14 @@
 name: Validate
 
+# HACS validation, required for inclusion in the HACS default list. The weekly
+# run catches rule changes upstream even when this repo is quiet.
 on:
   push:
     branches: [main]
   pull_request:
   schedule:
     - cron: "0 4 * * 1"
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -19,21 +22,3 @@ jobs:
       - uses: hacs/action@main
         with:
           category: plugin
-
-  build:
-    name: Type check, test and build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ha-viark-remote-card
-          path: dist/ha-viark-remote-card.js

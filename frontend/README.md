@@ -3,6 +3,7 @@
 [![hacs][hacs-badge]][hacs-url]
 [![release][release-badge]][release-url]
 [![validate][validate-badge]][validate-url]
+[![tests][tests-badge]][tests-url]
 [![license][license-badge]](LICENSE)
 
 A Home Assistant dashboard card that looks and works like the remote control of a
@@ -217,8 +218,10 @@ add it as a resource, as in [manual installation](#manual).
 1. Bump `version` in `package.json` and `VERSION` in `src/const.ts`. A test
    checks they match.
 2. Publish a GitHub release tagged `vX.Y.Z`.
-3. The **Release** workflow builds the card and attaches `ha-viark-remote-card.js`,
-   which is the file HACS installs.
+3. The **Release** workflow checks the tag matches `package.json`, runs the tests
+   and HACS validation against the tagged code, then builds the card and attaches
+   `ha-viark-remote-card.js`, which is the file HACS installs. If a check fails,
+   nothing is attached: fix it and publish a new patch release.
 
 ## Trademark
 
@@ -238,6 +241,8 @@ Viark logo.
 [release-url]: https://github.com/jorgediez/ha-viark-remote-card/releases/latest
 [validate-badge]: https://github.com/jorgediez/ha-viark-remote-card/actions/workflows/validate.yml/badge.svg
 [validate-url]: https://github.com/jorgediez/ha-viark-remote-card/actions/workflows/validate.yml
+[tests-badge]: https://github.com/jorgediez/ha-viark-remote-card/actions/workflows/tests.yml/badge.svg
+[tests-url]: https://github.com/jorgediez/ha-viark-remote-card/actions/workflows/tests.yml
 [license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [my-badge]: https://my.home-assistant.io/badges/hacs_repository.svg
 [my-url]: https://my.home-assistant.io/redirect/hacs_repository/?owner=jorgediez&repository=ha-viark-remote-card&category=plugin
