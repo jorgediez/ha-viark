@@ -8,10 +8,10 @@ and are easy to regress.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import struct
 import sys
 import zlib
-from pathlib import Path
 
 import pytest
 
@@ -35,7 +35,6 @@ from protocol import (  # noqa: E402
     frame,
     parse_login_block,
 )
-
 
 # --- framing ---------------------------------------------------------------
 
@@ -80,7 +79,9 @@ def test_xml_encoding_expands_array_into_parm_elements():
     body = client._encode(
         1000, {"array": [{"TvState": "0", "ProgramId": "00001234567890"}]}
     ).decode()
-    assert "<parm><TvState>0</TvState><ProgramId>00001234567890</ProgramId></parm>" in body
+    assert (
+        "<parm><TvState>0</TvState><ProgramId>00001234567890</ProgramId></parm>" in body
+    )
 
 
 # --- login block -----------------------------------------------------------
@@ -93,7 +94,7 @@ def _make_login_block(
     plain[0:12] = LOGIN_MAGIC
     plain[12:15] = serial_hi.to_bytes(3, "big")
     plain[15:18] = serial_lo.to_bytes(3, "big")
-    plain[20:20 + len(model)] = model
+    plain[20 : 20 + len(model)] = model
     plain[68:72] = bytes([50, 1, 168, 192])  # 192.168.1.50, stored backwards
     plain[72] = 140
     plain[73:75] = (132).to_bytes(2, "big")
@@ -229,8 +230,17 @@ def test_digits_are_contiguous_from_twelve():
 
 @pytest.mark.parametrize(
     ("alias", "code"),
-    [("up", 1), ("down", 2), ("ok", 5), ("menu", 6), ("exit", 7),
-     ("mute", 23), ("volume_up", 35), ("volume_down", 36), ("power", 42)],
+    [
+        ("up", 1),
+        ("down", 2),
+        ("ok", 5),
+        ("menu", 6),
+        ("exit", 7),
+        ("mute", 23),
+        ("volume_up", 35),
+        ("volume_down", 36),
+        ("power", 42),
+    ],
 )
 def test_agreed_key_codes(alias, code):
     """Only codes both reverse-engineering sources agree on are aliased."""
@@ -261,7 +271,9 @@ UNTESTED_SINGLE_SOURCE = (
 )
 
 
-@pytest.mark.parametrize(("code", "alias"), sorted(HARDWARE_CONFIRMED_SINGLE_SOURCE.items()))
+@pytest.mark.parametrize(
+    ("code", "alias"), sorted(HARDWARE_CONFIRMED_SINGLE_SOURCE.items())
+)
 def test_hardware_confirmed_codes_are_aliased(code, alias):
     """A code verified on the hardware outranks a document that omits it."""
     assert KEY_ALIASES[alias] == code

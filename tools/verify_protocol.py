@@ -10,12 +10,14 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
-import sys
 from pathlib import Path
+import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "custom_components" / "viark"))
+sys.path.insert(
+    0, str(Path(__file__).resolve().parents[1] / "custom_components" / "viark")
+)
 
-from protocol import (  # noqa: E402
+from protocol import (
     REQ_MUTE_STATE,
     REQ_PLAYING_CHANNEL,
     REQ_STB_INFO,
@@ -39,8 +41,12 @@ async def check(label, coro):
 
 async def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--host", default=DEFAULT_HOST, required=DEFAULT_HOST is None,
-                    help="receiver IP address (or set VIARK_HOST)")
+    ap.add_argument(
+        "--host",
+        default=DEFAULT_HOST,
+        required=DEFAULT_HOST is None,
+        help="receiver IP address (or set VIARK_HOST)",
+    )
     args = ap.parse_args()
 
     async with ViarkClient(args.host) as client:
@@ -61,8 +67,10 @@ async def main() -> int:
         print("\n=== channel paging (100 per page) ===")
         page = await client.channels(0, 4)
         for ch in page:
-            print(f"  #{ch.get('ServiceIndex')} {ch.get('ServiceName')} "
-                  f"id={ch.get('ServiceID')} radio={ch.get('Radio')}")
+            print(
+                f"  #{ch.get('ServiceIndex')} {ch.get('ServiceName')} "
+                f"id={ch.get('ServiceID')} radio={ch.get('Radio')}"
+            )
 
     return 0
 

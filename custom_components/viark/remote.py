@@ -8,8 +8,8 @@ numeric code, so buttons outside that table remain reachable.
 from __future__ import annotations
 
 import asyncio
-import logging
 from collections.abc import Iterable
+import logging
 from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
@@ -67,21 +67,25 @@ class ViarkRemote(CoordinatorEntity[ViarkCoordinator], RemoteEntity):
     _attr_name = "Remote"
 
     def __init__(self, coordinator: ViarkCoordinator, entry: ViarkConfigEntry) -> None:
+        """Initialise from the shared coordinator."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_remote"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry.entry_id)})
 
     @property
     def is_on(self) -> bool:
+        """Return whether the receiver is running rather than in standby."""
         state = self.coordinator.data
         return bool(state and state.powered_on)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
+        """Wake the receiver from standby."""
         if self.is_on:
             return
         await self._async_power_toggle()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        """Put the receiver into standby."""
         if not self.is_on:
             return
         await self._async_power_toggle()

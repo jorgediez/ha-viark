@@ -33,8 +33,8 @@ from PIL import Image, ImageDraw
 OUT = Path(__file__).resolve().parents[1] / "custom_components" / "viark" / "brand"
 
 # Readable against both light and dark backgrounds.
-DISH = (3, 155, 229, 255)      # blue
-ACCENT = (255, 167, 38, 255)   # amber, for the signal arcs
+DISH = (3, 155, 229, 255)  # blue
+ACCENT = (255, 167, 38, 255)  # amber, for the signal arcs
 SUPERSAMPLE = 4
 
 

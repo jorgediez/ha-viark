@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
 # Virtualenvs (a throwaway HA venv was used for import checks)
 .venv/

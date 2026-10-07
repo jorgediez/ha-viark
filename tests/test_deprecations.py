@@ -54,10 +54,16 @@ def test_platforms_use_the_config_entry_entities_callback():
     consistency guard rather than a deadline: copying an older platform's
     boilerplate is the easy way to reintroduce it in just one file.
     """
-    platforms = [p for p in SOURCES if "async_add_entities" in p.read_text(encoding="utf-8")]
+    platforms = [
+        p for p in SOURCES if "async_add_entities" in p.read_text(encoding="utf-8")
+    ]
     assert platforms, "no platform modules found"
     for path in platforms:
         text = path.read_text(encoding="utf-8")
-        assert "AddConfigEntryEntitiesCallback" in text, f"{path.name} misses the callback type"
+        assert "AddConfigEntryEntitiesCallback" in text, (
+            f"{path.name} misses the callback type"
+        )
         # Substring check: the new name contains the old one, so match the import.
-        assert "import AddEntitiesCallback" not in text, f"{path.name} imports the old alias"
+        assert "import AddEntitiesCallback" not in text, (
+            f"{path.name} imports the old alias"
+        )

@@ -16,12 +16,14 @@ import argparse
 import asyncio
 import json
 import os
-import sys
 from pathlib import Path
+import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "custom_components" / "viark"))
+sys.path.insert(
+    0, str(Path(__file__).resolve().parents[1] / "custom_components" / "viark")
+)
 
-from protocol import ViarkClient  # noqa: E402
+from protocol import ViarkClient
 
 #: Receiver address. Set VIARK_HOST, or pass --host explicitly.
 DEFAULT_HOST = os.environ.get("VIARK_HOST")
@@ -35,8 +37,12 @@ async def ainput(prompt: str) -> str:
 
 async def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--host", default=DEFAULT_HOST, required=DEFAULT_HOST is None,
-                    help="receiver IP address (or set VIARK_HOST)")
+    ap.add_argument(
+        "--host",
+        default=DEFAULT_HOST,
+        required=DEFAULT_HOST is None,
+        help="receiver IP address (or set VIARK_HOST)",
+    )
     ap.add_argument("--start", type=int, default=3)
     ap.add_argument("--end", type=int, default=40)
     ap.add_argument("--countdown", type=float, default=3.0)

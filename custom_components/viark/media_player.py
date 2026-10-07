@@ -36,6 +36,7 @@ from .const import (
 )
 from .coordinator import ViarkCoordinator, ViarkState
 from .protocol import ViarkError
+from .remote import resolve_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +81,7 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
     )
 
     def __init__(self, coordinator: ViarkCoordinator, entry: ViarkConfigEntry) -> None:
+        """Initialise and describe the receiver as a device."""
         super().__init__(coordinator)
         self._attr_unique_id = entry.entry_id
         login = coordinator.client.info
@@ -99,10 +101,12 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
 
     @property
     def available(self) -> bool:
+        """Return whether the receiver is reachable and reporting state."""
         return super().available and self._state is not None and self._state.available
 
     @property
     def state(self) -> MediaPlayerState:
+        """Return off in standby, idle with no channel, playing otherwise."""
         # OFF rather than IDLE for soft standby: IDLE means powered up with nothing
         # playing, which is the case below when the receiver is on but reports no
         # channel. MediaPlayerState.STANDBY was deprecated in favour of these two
@@ -115,6 +119,7 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
 
     @property
     def is_volume_muted(self) -> bool:
+        """Return whether the receiver is muted."""
         return self._state.muted
 
     @property
@@ -145,6 +150,7 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
 
     @property
     def media_channel(self) -> str | None:
+        """Return the channel number as shown on the TV."""
         current = self._state.current
         if not current:
             return None
@@ -154,6 +160,7 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        """Return details of the tuned channel and the receiver clock."""
         current = self._state.current or {}
         info = self._state.info
         hour, minute = info.get("StbHour"), info.get("StbMin")
@@ -181,8 +188,6 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
 
     async def async_send_key(self, key: str, repeat: int = 1) -> None:
         """Service handler: inject a named or raw key code."""
-        from .remote import resolve_key
-
         await self._send(*([resolve_key(key)] * repeat))
 
     async def async_media_next_track(self) -> None:
@@ -194,9 +199,11 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
         await self._send(KEY_CHANNEL_DOWN)
 
     async def async_volume_up(self) -> None:
+        """Volume up."""
         await self._send(KEY_VOLUME_UP)
 
     async def async_volume_down(self) -> None:
+        """Volume down."""
         await self._send(KEY_VOLUME_DOWN)
 
     async def async_mute_volume(self, mute: bool) -> None:
@@ -229,7 +236,9 @@ class ViarkMediaPlayer(CoordinatorEntity[ViarkCoordinator], MediaPlayerEntity):
         try:
             await self.coordinator.client.power_toggle()
         except ViarkError as exc:
-            raise HomeAssistantError(f"Viark receiver refused the power command: {exc}") from exc
+            raise HomeAssistantError(
+                f"Viark receiver refused the power command: {exc}"
+            ) from exc
         await self.coordinator.async_request_refresh()
 
     async def async_select_source(self, source: str) -> None:

@@ -11,10 +11,10 @@ identifying the current channel costs one cheap request rather than a full sweep
 
 from __future__ import annotations
 
-import logging
-import time
 from dataclasses import dataclass, field
 from datetime import timedelta
+import logging
+import time
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -51,15 +51,18 @@ class ViarkState:
 
     @property
     def available(self) -> bool:
+        """Return whether the receiver has reported its state."""
         return bool(self.info)
 
     @property
     def powered_on(self) -> bool:
+        """Return whether the receiver is running rather than in standby."""
         # PowerMode 1 == running; standby reports a different value.
         return self.info.get("PowerMode") in (None, 1)
 
     @property
     def channel_count(self) -> int:
+        """Return how many channels the receiver has stored."""
         return len(self.channels)
 
 
@@ -67,6 +70,7 @@ class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
     """Fetches and caches receiver state."""
 
     def __init__(self, hass: HomeAssistant, client: ViarkClient) -> None:
+        """Initialise and subscribe to the client's push notifications."""
         super().__init__(
             hass,
             _LOGGER,
@@ -154,7 +158,9 @@ class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
         return ViarkState(info=info, channels=channels, current=current, muted=muted)
 
     async def _async_channels(self, count: int) -> list[dict[str, Any]]:
-        stale = (time.monotonic() - self._channels_fetched_at) > CHANNEL_CACHE_REFRESH_SECONDS
+        stale = (
+            time.monotonic() - self._channels_fetched_at
+        ) > CHANNEL_CACHE_REFRESH_SECONDS
         if self._channels and count == self._channel_count and not stale:
             return self._channels
 

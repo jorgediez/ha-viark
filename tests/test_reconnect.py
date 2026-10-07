@@ -12,10 +12,10 @@ import contextlib
 import gc
 import json
 import logging
+from pathlib import Path
 import struct
 import sys
 import zlib
-from pathlib import Path
 
 import pytest
 
@@ -45,10 +45,7 @@ def make_login_block(use_json: bool = True) -> bytes:
 
 
 def reply(mtype: int, payload=None, status: int = 0) -> bytes:
-    if payload is None:
-        body = b""
-    else:
-        body = zlib.compress(json.dumps(payload).encode())
+    body = b"" if payload is None else zlib.compress(json.dumps(payload).encode())
     return b"GCDH" + struct.pack("<III", len(body), mtype, status) + body
 
 
@@ -95,7 +92,9 @@ class StubReceiver:
             return {"request": "998"}
         return json.loads(text)
 
-    async def _handle(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+    async def _handle(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ) -> None:
         self.connections += 1
         self.writers.append(writer)
         try:

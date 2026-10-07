@@ -9,8 +9,8 @@ The PNG header is parsed directly, so these tests need no imaging library.
 
 from __future__ import annotations
 
-import struct
 from pathlib import Path
+import struct
 
 import pytest
 
@@ -74,4 +74,6 @@ def test_no_unexpected_files_in_brand_directory():
 def test_brand_images_are_reasonably_small():
     """These ship to every install; keep them from bloating the integration."""
     for path in BRAND.glob("*.png"):
-        assert path.stat().st_size < 200_000, f"{path.name} is {path.stat().st_size} bytes"
+        assert path.stat().st_size < 200_000, (
+            f"{path.name} is {path.stat().st_size} bytes"
+        )

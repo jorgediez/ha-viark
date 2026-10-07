@@ -13,9 +13,9 @@ Needs a virtualenv with Home Assistant installed, which is not part of the repo:
 from __future__ import annotations
 
 import importlib
+from pathlib import Path
 import sys
 import traceback
-from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -41,7 +41,7 @@ def main() -> int:
     for name in MODULES:
         try:
             importlib.import_module(name)
-        except Exception as exc:  # noqa: BLE001 - reporting tool
+        except Exception as exc:
             failures += 1
             print(f"  [FAIL] {name}: {type(exc).__name__}: {exc}")
             traceback.print_exc()
@@ -67,8 +67,10 @@ def main() -> int:
     print("config flow, entity classes and key resolution all import cleanly")
     print(f"  media_player features: {ViarkMediaPlayer._attr_supported_features}")
     print(f"  remote entity name:    {ViarkRemote._attr_name}")
-    print(f"  diagnostic sensors:    {len(SENSORS)} "
-          f"({sum(d.entity_registry_enabled_default for d in SENSORS)} enabled by default)")
+    print(
+        f"  diagnostic sensors:    {len(SENSORS)} "
+        f"({sum(d.entity_registry_enabled_default for d in SENSORS)} enabled by default)"
+    )
     print(f"  binary sensors:        {len(BINARY_SENSORS)}")
     return 0
 
