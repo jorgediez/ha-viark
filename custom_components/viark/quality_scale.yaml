@@ -1,0 +1,95 @@
+# Home Assistant's Integration Quality Scale, as a checklist for this integration.
+# Hassfest only validates this file for core integrations; it is kept by hand.
+# https://developers.home-assistant.io/docs/core/integration-quality-scale/
+rules:
+  # Bronze
+  action-setup:
+    status: todo
+    comment: send_key is registered in the media player's platform setup, not async_setup.
+  appropriate-polling:
+    status: done
+    comment: The receiver pushes changes; a 120 s poll is only a backstop.
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency:
+    status: exempt
+    comment: No external requirements; the protocol client is part of the integration.
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: The integration provides no conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: The integration provides no triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities subscribe to nothing themselves; the coordinator handles pushes.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: There are no options.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The receiver takes no credentials.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: >-
+      Receivers announce themselves over a proprietary UDP broadcast that Home
+      Assistant cannot listen for; the user step pre-fills the address from it.
+  discovery-update-info:
+    status: exempt
+    comment: See discovery.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry is one receiver.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: Nothing the integration detects needs the user to act on it.
+  stale-devices:
+    status: exempt
+    comment: Each config entry is one receiver.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: The receiver speaks a raw TCP protocol, not HTTP.
+  strict-typing: todo

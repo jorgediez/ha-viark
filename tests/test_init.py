@@ -8,7 +8,6 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.viark.protocol import ViarkConnectionError, ViarkRequestError
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .common import HOST, PORT
@@ -75,20 +74,3 @@ async def test_an_empty_state_is_a_failed_refresh(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_changing_the_address_reloads(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_client: MagicMock
-) -> None:
-    """The config flow updates the host of a receiver that moved; it must apply."""
-    new_host = "192.168.1.77"
-
-    hass.config_entries.async_update_entry(
-        init_integration, data={**init_integration.data, CONF_HOST: new_host}
-    )
-    await hass.async_block_till_done()
-
-    assert init_integration.state is ConfigEntryState.LOADED
-    assert mock_client.client_class.call_count == 2
-    assert mock_client.client_class.call_args.args[0] == new_host
-    mock_client.disconnect.assert_awaited_once()

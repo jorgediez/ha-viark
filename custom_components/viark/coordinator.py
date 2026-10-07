@@ -17,6 +17,7 @@ import logging
 import time
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_call_later
@@ -66,14 +67,22 @@ class ViarkState:
         return len(self.channels)
 
 
+type ViarkConfigEntry = ConfigEntry[ViarkCoordinator]
+
+
 class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
     """Fetches and caches receiver state."""
 
-    def __init__(self, hass: HomeAssistant, client: ViarkClient) -> None:
+    config_entry: ViarkConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, entry: ViarkConfigEntry, client: ViarkClient
+    ) -> None:
         """Initialise and subscribe to the client's push notifications."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=SCAN_INTERVAL_SECONDS),
             request_refresh_debouncer=Debouncer(
@@ -144,7 +153,9 @@ class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
         try:
             info = await self.client.state()
             if not info:
-                raise UpdateFailed("receiver returned no state")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN, translation_key="no_state"
+                )
 
             channels = await self._async_channels(int(info.get("ChannelNum", 0)))
             current = await self._async_current(channels)
@@ -153,7 +164,11 @@ class ViarkCoordinator(DataUpdateCoordinator[ViarkState]):
             if muted is None:
                 muted = bool(info.get("MuteState"))
         except ViarkError as exc:
-            raise UpdateFailed(f"error talking to receiver: {exc}") from exc
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
 
         return ViarkState(info=info, channels=channels, current=current, muted=muted)
 

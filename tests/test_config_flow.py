@@ -11,7 +11,11 @@ import voluptuous as vol
 
 from custom_components.viark.const import DOMAIN
 from custom_components.viark.protocol import ViarkConnectionError, ViarkRequestError
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
@@ -19,7 +23,7 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from .common import HOST, PORT, PRODUCT_NAME, SERIAL, make_client
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Keep a created entry from setting up, which these tests do not need."""
     with patch(
@@ -76,7 +80,7 @@ async def test_user_flow_creates_an_entry(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_discover")
+@pytest.mark.usefixtures("mock_discover", "mock_setup_entry")
 async def test_a_busy_receiver_is_named_after_its_login_block(
     hass: HomeAssistant, probe_client: MagicMock
 ) -> None:
@@ -133,7 +137,7 @@ async def test_discovery_failing_still_shows_the_form(
     assert default_host(result) is None
 
 
-@pytest.mark.usefixtures("mock_discover")
+@pytest.mark.usefixtures("mock_discover", "mock_setup_entry")
 async def test_an_unreachable_receiver_shows_an_error_then_recovers(
     hass: HomeAssistant, probe_client: MagicMock
 ) -> None:
@@ -195,3 +199,104 @@ async def test_without_a_serial_the_address_identifies_the_receiver(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_discover", "probe_client")
+async def test_a_moved_receiver_reloads_once(
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_client: MagicMock
+) -> None:
+    """Each reload takes one of the receiver's few client slots; one is enough."""
+    new_host = "192.168.1.77"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: new_host, CONF_PORT: PORT}
+    )
+    await hass.async_block_till_done()
+
+    assert result["reason"] == "already_configured"
+    assert init_integration.state is ConfigEntryState.LOADED
+    assert mock_client.client_class.call_count == 2
+    assert mock_client.client_class.call_args.args[0] == new_host
+
+
+async def start_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> FlowResult:
+    """Open the reconfigure form for an entry."""
+    return await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id}
+    )
+
+
+@pytest.mark.usefixtures("probe_client")
+async def test_reconfigure_changes_the_address_and_reloads(
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_client: MagicMock
+) -> None:
+    new_host = "192.168.1.77"
+
+    result = await start_reconfigure(hass, init_integration)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: new_host, CONF_PORT: PORT}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert init_integration.data == {CONF_HOST: new_host, CONF_PORT: PORT}
+    assert init_integration.state is ConfigEntryState.LOADED
+    assert mock_client.client_class.call_count == 2
+    assert mock_client.client_class.call_args.args[0] == new_host
+
+
+async def test_reconfigure_retries_an_unreachable_address(
+    hass: HomeAssistant, init_integration: MockConfigEntry, probe_client: MagicMock
+) -> None:
+    probe_client.connect.side_effect = ViarkConnectionError("refused")
+
+    result = await start_reconfigure(hass, init_integration)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.77", CONF_PORT: PORT}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert init_integration.data[CONF_HOST] == HOST
+
+
+async def test_reconfigure_refuses_a_different_receiver(
+    hass: HomeAssistant, init_integration: MockConfigEntry, probe_client: MagicMock
+) -> None:
+    probe_client.info = {**probe_client.info, "serial": "999999999999"}
+
+    result = await start_reconfigure(hass, init_integration)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.77", CONF_PORT: PORT}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert init_integration.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("mock_client", "probe_client")
+async def test_reconfigure_without_a_serial_on_the_entry(hass: HomeAssistant) -> None:
+    """An entry made without a serial has nothing to compare, so any receiver goes."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await start_reconfigure(hass, entry)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.77", CONF_PORT: PORT}
+    )
+    await hass.async_block_till_done()
+
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "192.168.1.77"
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

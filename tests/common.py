@@ -76,4 +76,6 @@ def make_client() -> MagicMock:
     client.send_key = AsyncMock()
     client.switch_channel = AsyncMock()
     client.power_toggle = AsyncMock()
+    client.connected = True
+    client.use_json = True
     return client

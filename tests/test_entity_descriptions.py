@@ -7,6 +7,7 @@ entities themselves are covered in test_sensor.
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 import pytest
 
@@ -165,3 +166,23 @@ def test_receiver_full_flag_is_not_exposed_as_an_entity():
     keys |= {d.key for d in sensor.SENSORS}
     assert "client_slots_full" not in keys
     assert "connected_full" not in keys
+
+
+def test_every_raised_error_has_a_message():
+    """A missing message shows the bare translation key to the user."""
+    import json
+
+    raised = {
+        match
+        for path in ROOT.glob("*.py")
+        for match in re.findall(
+            r'translation_domain=DOMAIN,\s*translation_key="(\w+)"',
+            path.read_text(encoding="utf-8"),
+        )
+    }
+    messages = json.loads(
+        (ROOT / "translations" / "en.json").read_text(encoding="utf-8")
+    )["exceptions"]
+
+    assert raised, "the scan found no translated errors"
+    assert raised == set(messages)

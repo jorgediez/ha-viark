@@ -95,6 +95,39 @@ class ViarkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the address of a configured receiver."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
+            try:
+                info = await _async_probe(host, port)
+            except ViarkError as exc:
+                _LOGGER.debug("Viark probe of %s:%s failed: %s", host, port, exc)
+                errors["base"] = "cannot_connect"
+            else:
+                # An entry made without a serial has nothing to compare against.
+                serial = info.get("serial")
+                if serial and entry.unique_id:
+                    await self.async_set_unique_id(str(serial))
+                    self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_HOST: host, CONF_PORT: port}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                _schema(None), user_input or entry.data
+            ),
+            errors=errors,
+        )
+
     async def _async_discovered_host(self) -> str | None:
         """Offer a receiver heard broadcasting on the LAN, if there is one."""
         try:
