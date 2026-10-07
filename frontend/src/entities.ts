@@ -27,7 +27,10 @@ export function powerState(entity: HassEntity, player?: HassEntity): PowerState 
  * When the card is bound to the remote entity, the media_player is found through
  * the shared device.
  */
-export function findMediaPlayer(hass: HomeAssistant, entityId: string): string | undefined {
+export function findMediaPlayer(
+  hass: HomeAssistant,
+  entityId: string,
+): string | undefined {
   if (entityId.startsWith("media_player.")) {
     return entityId;
   }
@@ -37,13 +40,16 @@ export function findMediaPlayer(hass: HomeAssistant, entityId: string): string |
     return undefined;
   }
   return Object.values(entities).find(
-    (entry) => entry.device_id === deviceId && entry.entity_id.startsWith("media_player."),
+    (entry) =>
+      entry.device_id === deviceId && entry.entity_id.startsWith("media_player."),
   )?.entity_id;
 }
 
 /** First Viark entity, preferring the media_player; used for the card picker preview. */
 export function findViarkEntity(hass: HomeAssistant): string | undefined {
-  const viark = Object.values(hass.entities ?? {}).filter((e) => e.platform === VIARK_DOMAIN);
+  const viark = Object.values(hass.entities ?? {}).filter(
+    (e) => e.platform === VIARK_DOMAIN,
+  );
   return (
     viark.find((e) => e.entity_id.startsWith("media_player.")) ??
     viark.find((e) => e.entity_id.startsWith("remote."))

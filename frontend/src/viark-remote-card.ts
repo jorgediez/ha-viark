@@ -1,4 +1,11 @@
-import { LitElement, html, nothing, svg, type PropertyValues, type TemplateResult } from "lit";
+import {
+  LitElement,
+  html,
+  nothing,
+  svg,
+  type PropertyValues,
+  type TemplateResult,
+} from "lit";
 import { property, state } from "lit/decorators.js";
 
 import { resolveAction, validateConfig } from "./actions";
@@ -12,7 +19,12 @@ import {
   REPEAT_INTERVAL_MS,
   VERSION,
 } from "./const";
-import { findMediaPlayer, findViarkEntity, powerState, type PowerState } from "./entities";
+import {
+  findMediaPlayer,
+  findViarkEntity,
+  powerState,
+  type PowerState,
+} from "./entities";
 import { localize } from "./localize";
 import { styles } from "./styles";
 import type { HassEntity, HomeAssistant, ViarkRemoteCardConfig } from "./types";
@@ -37,7 +49,9 @@ export class ViarkRemoteCard extends LitElement {
     return document.createElement(EDITOR_TYPE);
   }
 
-  public static getStubConfig(hass: HomeAssistant): Omit<ViarkRemoteCardConfig, "type"> {
+  public static getStubConfig(
+    hass: HomeAssistant,
+  ): Omit<ViarkRemoteCardConfig, "type"> {
     return { entity: findViarkEntity(hass) ?? "media_player.viark_receiver" };
   }
 
@@ -64,7 +78,9 @@ export class ViarkRemoteCard extends LitElement {
   }
 
   private get _playerId(): string | undefined {
-    return this.hass && this._config ? findMediaPlayer(this.hass, this._config.entity) : undefined;
+    return this.hass && this._config
+      ? findMediaPlayer(this.hass, this._config.entity)
+      : undefined;
   }
 
   private _option<K extends keyof typeof DEFAULTS>(name: K): boolean {
@@ -101,7 +117,9 @@ export class ViarkRemoteCard extends LitElement {
     }
     const channel = player?.attributes.media_channel;
     const title = player?.attributes.media_title;
-    const parts = [channel, title].filter((part) => part !== undefined && part !== null && part !== "");
+    const parts = [channel, title].filter(
+      (part) => part !== undefined && part !== null && part !== "",
+    );
     return parts.length ? parts.join("  ") : localize(this._lang, "status.on");
   }
 
@@ -129,7 +147,8 @@ export class ViarkRemoteCard extends LitElement {
       (entity.attributes.friendly_name as string | undefined) ??
       name;
 
-    const key = (id: ButtonId, className = "key") => this._renderKey(id, className, disabled);
+    const key = (id: ButtonId, className = "key") =>
+      this._renderKey(id, className, disabled);
 
     return html`
       <ha-card>
@@ -137,14 +156,22 @@ export class ViarkRemoteCard extends LitElement {
           <div class="remote" role="group" aria-label=${deviceName}>
             <div class="cap">
               <span class="led ${power}"></span>
-              ${this._option("show_status")
-                ? html`<span class="status" aria-live="polite">${this._statusText(power, player)}</span>`
-                : nothing}
+              ${
+                this._option("show_status")
+                  ? html`<span class="status" aria-live="polite"
+                      >${this._statusText(power, player)}</span
+                    >`
+                  : nothing
+              }
             </div>
 
-            <div class="row">${key("power", "key round power")} ${key("mute", "key round mute")}</div>
+            <div class="row">
+              ${key("power", "key round power")} ${key("mute", "key round mute")}
+            </div>
 
-            <div class="grid four pills">${(["resol", "txt", "audio", "subt"] as const).map((id) => key(id))}</div>
+            <div class="grid four pills">
+              ${(["resol", "txt", "audio", "subt"] as const).map((id) => key(id))}
+            </div>
 
             <div class="grid numpad">
               ${(
@@ -174,11 +201,12 @@ export class ViarkRemoteCard extends LitElement {
 
             <div class="dpad">
               <div class="ring">
-                ${key("up", "wedge up")} ${key("down", "wedge down")} ${key("left", "wedge left")}
-                ${key("right", "wedge right")}
+                ${key("up", "wedge up")} ${key("down", "wedge down")}
+                ${key("left", "wedge left")} ${key("right", "wedge right")}
               </div>
-              ${key("ok", "key ok")} ${key("info", "key corner info")} ${key("menu", "key corner menu")}
-              ${key("recall", "key corner recall")} ${key("exit", "key corner exit")}
+              ${key("ok", "key ok")} ${key("info", "key corner info")}
+              ${key("menu", "key corner menu")} ${key("recall", "key corner recall")}
+              ${key("exit", "key corner exit")}
             </div>
 
             <div class="grid four colors">
@@ -213,11 +241,17 @@ export class ViarkRemoteCard extends LitElement {
     `;
   }
 
-  private _renderKey(id: ButtonId, className: string, disabled: boolean): TemplateResult {
+  private _renderKey(
+    id: ButtonId,
+    className: string,
+    disabled: boolean,
+  ): TemplateResult {
     const def = BUTTONS[id];
     const label = localize(this._lang, `buttons.${id}`);
     const face = def.icon
-      ? html`<svg viewBox="0 0 24 24" aria-hidden="true">${svg`<path d=${def.icon}></path>`}</svg>`
+      ? html`<svg viewBox="0 0 24 24" aria-hidden="true">
+          ${svg`<path d=${def.icon}></path>`}
+        </svg>`
       : (def.label ?? "").split("\n").map((line) => html`<span>${line}</span>`);
 
     return html`<button
@@ -337,7 +371,9 @@ export class ViarkRemoteCard extends LitElement {
   }
 
   private _fire(type: string, detail: unknown): void {
-    this.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent(type, { detail, bubbles: true, composed: true }),
+    );
   }
 }
 

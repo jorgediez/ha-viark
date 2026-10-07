@@ -17,13 +17,25 @@ const hass = (entities: HomeAssistant["entities"]): HomeAssistant => ({
 describe("entities", () => {
   const registry = {
     "light.kitchen": { entity_id: "light.kitchen", device_id: "d2", platform: "hue" },
-    "remote.viark_remote": { entity_id: "remote.viark_remote", device_id: "d1", platform: "viark" },
-    "media_player.viark": { entity_id: "media_player.viark", device_id: "d1", platform: "viark" },
+    "remote.viark_remote": {
+      entity_id: "remote.viark_remote",
+      device_id: "d1",
+      platform: "viark",
+    },
+    "media_player.viark": {
+      entity_id: "media_player.viark",
+      device_id: "d1",
+      platform: "viark",
+    },
   };
 
   it("finds the media player that shares the remote's device", () => {
-    expect(findMediaPlayer(hass(registry), "remote.viark_remote")).toBe("media_player.viark");
-    expect(findMediaPlayer(hass(registry), "media_player.viark")).toBe("media_player.viark");
+    expect(findMediaPlayer(hass(registry), "remote.viark_remote")).toBe(
+      "media_player.viark",
+    );
+    expect(findMediaPlayer(hass(registry), "media_player.viark")).toBe(
+      "media_player.viark",
+    );
     expect(findMediaPlayer(hass({}), "remote.viark_remote")).toBeUndefined();
   });
 
@@ -34,7 +46,11 @@ describe("entities", () => {
 });
 
 describe("powerState", () => {
-  const entity = (state: string): HassEntity => ({ entity_id: "x.y", state, attributes: {} });
+  const entity = (state: string): HassEntity => ({
+    entity_id: "x.y",
+    state,
+    attributes: {},
+  });
 
   it.each([
     ["off", "standby"], // soft standby since ha-viark 1.2.0
@@ -61,7 +77,9 @@ describe("localize", () => {
   it("falls back to English and substitutes variables", () => {
     expect(localize("es-ES", "status.standby")).toBe("En espera");
     expect(localize("de", "status.standby")).toBe("Standby");
-    expect(localize("en", "status.not_found", { entity: "x.y" })).toBe("Entity not available: x.y");
+    expect(localize("en", "status.not_found", { entity: "x.y" })).toBe(
+      "Entity not available: x.y",
+    );
   });
 
   it.each(Object.keys(TRANSLATIONS))("labels every button in %s", (lang) => {
