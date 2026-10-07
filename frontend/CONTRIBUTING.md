@@ -18,6 +18,8 @@ Knowing which side a problem is on saves everyone time.
   download helps there.
 - **Questions and ideas**, or showing how you use the card: the
   [community thread](https://community.home-assistant.io/t/custom-card-viark-remote-card-the-receivers-remote-on-your-dashboard/1025251).
+- **A security problem**: not in an issue or the thread. See
+  [SECURITY.md](SECURITY.md) for how to report it privately.
 
 ## Adding a button's key
 
