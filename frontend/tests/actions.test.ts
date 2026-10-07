@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { keyCall, resolveAction, validateConfig } from "../src/actions";
 import { BUTTON_IDS, BUTTONS } from "../src/buttons";
 import type { ViarkRemoteCardConfig } from "../src/types";
+import integration from "./integration-key-aliases.json";
 
 const PLAYER = "media_player.viark_sat_4k";
 const REMOTE = "remote.viark_sat_4k_remote";
@@ -15,60 +16,8 @@ const config = (
   ...overrides,
 });
 
-/**
- * KEY_ALIASES from custom_components/viark/const.py in jorgediez/ha-viark 1.1.0,
- * unchanged in 1.2.0.
- * Every named key the card sends must be one the integration accepts.
- */
-const INTEGRATION_KEY_ALIASES = new Set([
-  "up",
-  "down",
-  "left",
-  "right",
-  "ok",
-  "select",
-  "menu",
-  "exit",
-  "back",
-  "red",
-  "green",
-  "yellow",
-  "blue",
-  "tv_radio",
-  "mute",
-  "recall",
-  "satellite",
-  "subtitle",
-  "epg",
-  "favourite",
-  "favorite",
-  "teletext",
-  "volume_up",
-  "volume_down",
-  "page_up",
-  "page_down",
-  "find",
-  "power",
-  "usb",
-  "audio",
-  "freeze",
-  "resolution",
-  "timer",
-  "f1",
-  "f2",
-  "info",
-  "record",
-  "rewind",
-  "fast_forward",
-  "play",
-  "stop",
-  "pause",
-  "previous",
-  "next",
-  "channel_up",
-  "channel_down",
-  ...Array.from({ length: 10 }, (_, d) => `digit_${d}`),
-]);
+/** Every named key the card sends must be one the integration accepts. */
+const INTEGRATION_KEY_ALIASES = new Set(integration.keys);
 
 describe("button table", () => {
   it("only uses key names the integration knows", () => {

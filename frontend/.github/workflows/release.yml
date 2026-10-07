@@ -35,9 +35,14 @@ jobs:
     needs: version
     uses: ./.github/workflows/validate.yml
 
+  key-aliases:
+    name: Key names
+    needs: version
+    uses: ./.github/workflows/key-aliases.yml
+
   release:
     name: Build and attach the card to the release
-    needs: [tests, validate]
+    needs: [tests, validate, key-aliases]
     runs-on: ubuntu-latest
     permissions:
       contents: write

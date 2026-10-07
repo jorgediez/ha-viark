@@ -1,0 +1,52 @@
+name: Bug report
+description: The card doesn't look or work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        If the receiver doesn't react, or you see a connection or "unknown key" error
+        from the integration, please report it in the
+        [integration's repository](https://github.com/jorgediez/ha-viark/issues) instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: card_version
+    attributes:
+      label: Card version
+      description: The browser console shows `VIARK-REMOTE-CARD vX.Y.Z` when the card loads.
+    validations:
+      required: true
+  - type: input
+    id: integration_version
+    attributes:
+      label: Integration version
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Browser or companion app
+      placeholder: Chrome 140 on Windows, Home Assistant app on Android, ...
+  - type: textarea
+    id: config
+    attributes:
+      label: Card configuration
+      description: The card's YAML, from the dashboard editor.
+      render: yaml
+  - type: textarea
+    id: console
+    attributes:
+      label: Browser console errors
+      render: text
