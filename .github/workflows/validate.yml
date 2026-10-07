@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   hacs:
-    name: HACS validation
+    name: HACS
     runs-on: ubuntu-latest
     steps:
       - uses: hacs/action@main
@@ -24,7 +24,7 @@ jobs:
           category: integration
 
   hassfest:
-    name: Hassfest validation
+    name: Hassfest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
