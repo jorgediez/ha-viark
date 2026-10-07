@@ -11,7 +11,7 @@ import type { HassEntity, HomeAssistant } from "../src/types";
 const hass = (entities: HomeAssistant["entities"]): HomeAssistant => ({
   states: {},
   entities,
-  callService: async () => undefined,
+  callService: () => Promise.resolve(undefined),
 });
 
 describe("entities", () => {

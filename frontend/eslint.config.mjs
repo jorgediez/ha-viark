@@ -14,6 +14,11 @@ export default defineConfig(
       globals: globals.browser,
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
+    rules: {
+      // Lit calls listeners bound in templates (@click=${this._onClick}) with the
+      // element as `this`, so passing a method there is not an unbound call.
+      "@typescript-eslint/unbound-method": "off",
+    },
   },
   {
     files: ["**/*.mjs"],

@@ -95,7 +95,7 @@ export class ViarkRemoteCard extends LitElement {
     if (changed.has("_config" as keyof ViarkRemoteCard)) {
       return true;
     }
-    const oldHass = changed.get("hass") as HomeAssistant | undefined;
+    const oldHass = changed.get("hass");
     if (!oldHass || !this.hass) {
       return true;
     }
