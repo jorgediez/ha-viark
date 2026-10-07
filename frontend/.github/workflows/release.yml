@@ -1,8 +1,11 @@
 name: Release
 
 # Builds the card from the tagged code and attaches ha-viark-remote-card.js to
-# the release, which is the file HACS installs. The same checks as a pull
-# request run first, so a release that fails them gets no file attached.
+# the release, which is the file HACS installs. The tests and the key-name check
+# run first, so a release that fails them gets no file attached.
+#
+# HACS validation runs last, not first: for a dashboard card it looks for the
+# file in the latest release, which this release only has once it is attached.
 on:
   release:
     types: [published]
@@ -30,11 +33,6 @@ jobs:
     needs: version
     uses: ./.github/workflows/tests.yml
 
-  validate:
-    name: Validate
-    needs: version
-    uses: ./.github/workflows/validate.yml
-
   key-aliases:
     name: Key names
     needs: version
@@ -42,7 +40,7 @@ jobs:
 
   release:
     name: Build and attach the card to the release
-    needs: [tests, validate, key-aliases]
+    needs: [tests, key-aliases]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -58,3 +56,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$GITHUB_REF_NAME" dist/ha-viark-remote-card.js --clobber
+
+  validate:
+    name: Validate
+    needs: release
+    uses: ./.github/workflows/validate.yml

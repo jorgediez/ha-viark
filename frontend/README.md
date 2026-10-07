@@ -222,10 +222,11 @@ add it as a resource, as in [manual installation](#manual).
 1. Bump `version` in `package.json` and `VERSION` in `src/const.ts`. A test
    checks they match.
 2. Publish a GitHub release tagged `vX.Y.Z`.
-3. The **Release** workflow checks the tag matches `package.json`, runs the tests,
-   HACS validation and the key-name check against the tagged code, then builds the
-   card and attaches `ha-viark-remote-card.js`, which is the file HACS installs. If
-   a check fails, nothing is attached: fix it and publish a new patch release.
+3. The **Release** workflow checks the tag matches `package.json`, runs the tests
+   and the key-name check against the tagged code, then builds the card and
+   attaches `ha-viark-remote-card.js`, which is the file HACS installs. If a check
+   fails, nothing is attached: fix it and publish a new patch release. HACS
+   validation runs last, since it needs the attached file.
 
 ## Contributing
 
