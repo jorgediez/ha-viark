@@ -21,7 +21,7 @@ and Home Assistant falls back to the non-prefixed image when a dark_ one is
 absent.
 
     pip install pillow
-    python tools/make_brand_images.py
+    python scripts/make_brand_images.py
 """
 
 from __future__ import annotations
