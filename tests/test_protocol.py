@@ -8,18 +8,13 @@ and are easy to regress.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import struct
-import sys
 import zlib
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1] / "custom_components" / "viark"
-sys.path.insert(0, str(ROOT))
-
-from const import KEY_ALIASES, KEY_DIGIT_BASE  # noqa: E402
-from protocol import (  # noqa: E402
+from custom_components.viark.const import KEY_ALIASES, KEY_DIGIT_BASE
+from custom_components.viark.protocol import (
     ACK_LENGTH,
     ACK_MAGIC,
     CHANNEL_PAGE_SIZE,

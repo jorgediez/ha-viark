@@ -1,133 +1,20 @@
 """Tests for the diagnostic sensor and binary sensor descriptions.
 
-These import the platform modules without Home Assistant, so they exercise the
-value functions and the registry metadata rather than the entity plumbing.
+These exercise the value functions and the registry metadata directly; the
+entities themselves are covered in test_sensor.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
-import sys
-from types import ModuleType, SimpleNamespace
 
 import pytest
 
+from custom_components.viark import binary_sensor, sensor
+
+from .common import make_login
+
 ROOT = Path(__file__).resolve().parents[1] / "custom_components" / "viark"
-sys.path.insert(0, str(ROOT))
-
-from protocol import parse_login_block  # noqa: E402
-
-
-def _stub_homeassistant() -> None:
-    """Provide the minimum Home Assistant surface the platforms import.
-
-    Only the descriptor classes and enums are needed to build and evaluate the
-    entity descriptions, so stubbing avoids depending on a full HA install.
-    """
-    if "homeassistant" in sys.modules:
-        return
-
-    def module(name: str, **attrs) -> ModuleType:
-        mod = ModuleType(name)
-        for key, value in attrs.items():
-            setattr(mod, key, value)
-        sys.modules[name] = mod
-        return mod
-
-    # Home Assistant's EntityDescription is a frozen, keyword-only dataclass;
-    # the stub must be one too or subclasses lose the inherited fields.
-    @dataclass(frozen=True, kw_only=True)
-    class _Description:
-        key: str
-        translation_key: str | None = None
-        entity_category: str | None = None
-        entity_registry_enabled_default: bool = True
-        native_unit_of_measurement: str | None = None
-        state_class: str | None = None
-        device_class: str | None = None
-
-    module("homeassistant")
-    module(
-        "homeassistant.const", EntityCategory=SimpleNamespace(DIAGNOSTIC="diagnostic")
-    )
-    module("homeassistant.core", HomeAssistant=object, callback=lambda f: f)
-    module("homeassistant.components")
-    module(
-        "homeassistant.components.sensor",
-        SensorEntity=object,
-        SensorEntityDescription=_Description,
-        SensorStateClass=SimpleNamespace(MEASUREMENT="measurement"),
-    )
-    module(
-        "homeassistant.components.binary_sensor",
-        BinarySensorEntity=object,
-        BinarySensorEntityDescription=_Description,
-        BinarySensorDeviceClass=SimpleNamespace(PROBLEM="problem"),
-    )
-    module("homeassistant.helpers")
-    module("homeassistant.helpers.debounce", Debouncer=object)
-    module("homeassistant.helpers.device_registry", DeviceInfo=dict)
-    module("homeassistant.helpers.event", async_call_later=lambda *a: None)
-    module(
-        "homeassistant.helpers.entity_platform",
-        AddConfigEntryEntitiesCallback=object,
-    )
-
-    class _CoordinatorEntity:
-        def __class_getitem__(cls, _item):
-            return cls
-
-        def __init__(self, *_a, **_kw):
-            pass
-
-    module(
-        "homeassistant.helpers.update_coordinator",
-        CoordinatorEntity=_CoordinatorEntity,
-        DataUpdateCoordinator=_CoordinatorEntity,
-        UpdateFailed=Exception,
-    )
-
-
-_stub_homeassistant()
-
-# The platform modules import "from . import ViarkConfigEntry"; provide a package
-# shim so they can be imported standalone.
-_pkg = ModuleType("viark_pkg")
-_pkg.__path__ = [str(ROOT)]
-_pkg.ViarkConfigEntry = object
-sys.modules["viark_pkg"] = _pkg
-
-import importlib.util  # noqa: E402
-
-
-def _load(name: str):
-    spec = importlib.util.spec_from_file_location(
-        f"viark_pkg.{name}", ROOT / f"{name}.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-sensor = _load("sensor")
-binary_sensor = _load("binary_sensor")
-
-
-def _login() -> dict:
-    plain = bytearray(108)
-    plain[0:12] = b"39WwijOog54a"
-    plain[12:15] = (123456).to_bytes(3, "big")
-    plain[15:18] = (654321).to_bytes(3, "big")
-    plain[20:32] = b"VIARK SAT 4K"
-    plain[52:60] = bytes(range(8))
-    plain[60:68] = bytes(range(8, 16))
-    plain[68:72] = bytes([50, 1, 168, 192])
-    plain[72] = 140
-    plain[73:75] = (132).to_bytes(2, "big")
-    plain[84] = 0x44
-    return parse_login_block(bytes(b ^ 0x5B for b in reversed(bytes(plain))))
 
 
 STATE = {
@@ -142,7 +29,7 @@ STATE = {
 
 def _value(key: str):
     description = next(d for d in sensor.SENSORS if d.key == key)
-    return description.value_fn(_login(), STATE)
+    return description.value_fn(make_login(), STATE)
 
 
 @pytest.mark.parametrize(
@@ -172,7 +59,7 @@ def test_chip_ids_are_hex_strings():
 
 def test_receiver_clock_is_none_without_a_clock():
     description = next(d for d in sensor.SENSORS if d.key == "receiver_clock")
-    assert description.value_fn(_login(), {}) is None
+    assert description.value_fn(make_login(), {}) is None
 
 
 def test_sensor_keys_are_unique():
@@ -195,7 +82,7 @@ def test_every_sensor_is_diagnostic():
 
 
 def test_binary_sensor_values():
-    login = _login()
+    login = make_login()
     values = {d.key: d.value_fn(login) for d in binary_sensor.BINARY_SENSORS}
     assert values["satellite_menu"] is True
 

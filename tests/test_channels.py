@@ -9,15 +9,9 @@ number.
 
 from __future__ import annotations
 
-from pathlib import Path
-import sys
-
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1] / "custom_components" / "viark"
-sys.path.insert(0, str(ROOT))
-
-from channels import (  # noqa: E402
+from custom_components.viark.channels import (
     build_labels,
     format_label,
     label_width,
