@@ -1,0 +1,53 @@
+name: Bug report
+description: Something doesn't work as expected.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Receiver brand and model
+      description: The name on the box (Viark SAT 4K, GTMedia, ...).
+    validations:
+      required: true
+  - type: input
+    id: platform_id
+    attributes:
+      label: Platform ID
+      description: Shown by the receiver's "Platform ID" diagnostic sensor, and in the diagnostics.
+  - type: input
+    id: software_version
+    attributes:
+      label: Receiver software version
+      description: Shown by the "Software version" diagnostic sensor.
+  - type: input
+    id: integration_version
+    attributes:
+      label: Integration version
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: >-
+        Settings → Devices & Services → Viark → ⋮ → Download diagnostics, and attach the file.
+        (The address, serial number and chip ids are redacted, and channel names are left out.)
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant lines from the Home Assistant log, with debug logging enabled if possible.
+      render: text

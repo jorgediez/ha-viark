@@ -50,7 +50,7 @@ ignore = [
 # takes optional settings, and asserts narrow types after a lazy connect.
 "custom_components/**/protocol.py" = ["ASYNC109", "PLR0913", "PLR0917", "S101"]
 # Interactive command-line tools for working against real hardware.
-"tools/**" = [
+"scripts/**" = [
   "ASYNC240",
   "BLE001",
   "D",

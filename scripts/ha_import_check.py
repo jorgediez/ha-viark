@@ -7,7 +7,7 @@ Needs a virtualenv with Home Assistant installed, which is not part of the repo:
 
     python -m venv .venv-ha
     .venv-ha/Scripts/pip install homeassistant     # Scripts/ -> bin/ on POSIX
-    .venv-ha/Scripts/python tools/ha_import_check.py
+    .venv-ha/Scripts/python scripts/ha_import_check.py
 """
 
 from __future__ import annotations

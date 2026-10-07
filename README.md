@@ -1,6 +1,8 @@
 # Viark Satellite Receiver — Home Assistant integration
 
 [![hacs][hacs-badge]][hacs-url]
+[![release][release-badge]][release-url]
+[![validate][validate-badge]][validate-url]
 [![tests][tests-badge]][tests-url]
 [![license][license-badge]](LICENSE)
 
@@ -57,6 +59,10 @@ no external Python dependencies.
 
 ### HACS (custom repository)
 
+[![Open your Home Assistant instance and open this repository in HACS.][my-hacs-badge]][my-hacs-url]
+
+Or by hand:
+
 1. HACS → Integrations → ⋮ → **Custom repositories**
 2. Add `https://github.com/jorgediez/ha-viark` as an **Integration**
 3. Install **Viark Satellite Receiver**, then restart Home Assistant
@@ -69,13 +75,19 @@ dependencies.
 
 ### Configuration
 
-*Settings → Devices & Services → Add Integration → Viark*.
+[![Open your Home Assistant instance and start setting up Viark.][my-setup-badge]][my-setup-url]
+
+Or *Settings → Devices & Services → Add Integration → Viark*.
 
 The form pre-fills the address of any receiver it hears broadcasting on the LAN,
 so you normally just confirm. If Home Assistant runs in a container without host
 networking it will not hear the broadcast — enter the IP manually. Receivers are
 de-duplicated by serial number, so re-adding after an IP change updates the
 existing entry instead of creating a duplicate.
+
+To change the address of a configured receiver, open it under *Settings →
+Devices & Services → Viark*, then **⋮ → Reconfigure**. An address that answers
+with a different receiver's serial number is refused.
 
 ## Entities
 
@@ -157,7 +169,7 @@ The login block's "receiver full" bit is deliberately **not** exposed. The
 client refuses to finish logging in when it is set, so for any connected client
 it would be permanently false.
 
-## Services
+## Actions
 
 ```yaml
 # Press a named key
@@ -206,7 +218,43 @@ still reads `playing`; don't build an automation that depends on detecting it.
 `pause` (63) is the remote's Pause button and acts on USB media playback, which is
 a different key from `freeze` (55).
 
-Run `python tools/viark_cli.py keys` for the table with codes.
+Run `python scripts/viark_cli.py keys` for the table with codes.
+
+### Example automations
+
+```yaml
+# Start on the news when the receiver comes out of standby in the morning
+triggers:
+  - trigger: state
+    entity_id: media_player.viark_sat_4k
+    from: "off"
+    to: playing
+conditions:
+  - condition: time
+    after: "06:00:00"
+    before: "10:00:00"
+actions:
+  - action: media_player.select_source
+    target:
+      entity_id: media_player.viark_sat_4k
+    data:
+      source: "News HD"
+
+# Mute the TV while someone is at the door
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.doorbell
+    to: "on"
+actions:
+  - action: media_player.volume_mute
+    target:
+      entity_id: media_player.viark_sat_4k
+    data:
+      is_volume_muted: true
+```
+
+Muting only sends the mute key when the receiver is not already muted, so the
+second automation cannot unmute by accident.
 
 ## Companion dashboard card
 
@@ -219,6 +267,46 @@ It is a separate project with its own release cycle; this integration does not
 require it, and the card needs this integration installed to have anything to
 talk to. The named keys listed above are what the card sends, so anything the
 card can do is also reachable from an automation.
+
+## Troubleshooting
+
+* **The receiver is not offered during setup.** Discovery listens for the
+  receiver's UDP broadcast, which does not reach a Home Assistant container
+  without host networking. Enter the IP address by hand.
+* **Setup keeps retrying, or the entities are unavailable.** The receiver is
+  probably in deep standby, where it leaves the network. Wake it with the
+  physical remote; Home Assistant reconnects on its own.
+* **"receiver has no free client slot".** The receiver accepts only a few
+  clients at once. Close the G-MScreen app on your phones, or any other
+  software connected to the receiver, and Home Assistant gets back in on its
+  next retry.
+* **Changing channel fails with "receiver is showing a menu" or "channel is
+  being recorded".** The receiver refuses to tune in those states. Close the
+  menu, or wait for the recording.
+* **The address changed.** Use **⋮ → Reconfigure** on the integration (see
+  [Configuration](#configuration)).
+
+When reporting a problem, attach the integration's diagnostics: *Settings →
+Devices & Services → Viark → ⋮ → Download diagnostics*. The receiver's address,
+serial number and chip ids are redacted, and channel names are left out. A
+debug log helps too; enable it from the same menu, or with:
+
+```yaml
+logger:
+  logs:
+    custom_components.viark: debug
+```
+
+## Removal
+
+1. *Settings → Devices & Services → Viark*, then **⋮ → Delete** on each
+   receiver.
+2. If you installed through HACS, remove **Viark Satellite Receiver** there;
+   otherwise delete `config/custom_components/viark/`.
+3. Restart Home Assistant.
+
+Nothing is left on the receiver: it keeps no record of Home Assistant beyond
+the open connection.
 
 ## Icons
 
@@ -243,15 +331,15 @@ integration should not imply an official association, and shipping a
 manufacturer's trademark would do exactly that. No `logo.png` is included for the
 same reason — that slot is a brand wordmark, which is not ours to invent.
 
-Regenerate with `python tools/make_brand_images.py` (needs `pillow`), or simply
+Regenerate with `python scripts/make_brand_images.py` (needs `pillow`), or simply
 replace the PNGs. `tests/test_brand_images.py` checks size, squareness,
 transparency and filenames.
 
 ## Protocol
 
 The receiver speaks an undocumented protocol on TCP 20000. It is described in
-full in **[PROTOCOL.md](PROTOCOL.md)** — framing, the obfuscated login block,
-reply headers, request numbers, status codes and the remote key table.
+full in **[docs/PROTOCOL.md](docs/PROTOCOL.md)** — framing, the obfuscated login
+block, reply headers, request numbers, status codes and the remote key table.
 
 That document was assembled by cross-referencing **two independent
 reverse-engineering efforts** — one of the GMScreen Android app, one of the
@@ -263,26 +351,26 @@ happened with key codes 55 and 63.
 
 ## Development
 
-The tools talk to a receiver directly, without Home Assistant. Set `VIARK_HOST`
+The scripts talk to a receiver directly, without Home Assistant. Set `VIARK_HOST`
 or pass `--host`:
 
 ```bash
 export VIARK_HOST=192.168.1.50
 
-python tools/viark_cli.py discover              # listen on UDP 25860
-python tools/viark_cli.py info                  # receiver state
-python tools/viark_cli.py now                   # current channel
-python tools/viark_cli.py channels --start 0 --end 20
-python tools/viark_cli.py tune "News HD"           # direct tune by name
-python tools/viark_cli.py key mute
-python tools/viark_cli.py keys                  # key alias table
+python scripts/viark_cli.py discover              # listen on UDP 25860
+python scripts/viark_cli.py info                  # receiver state
+python scripts/viark_cli.py now                   # current channel
+python scripts/viark_cli.py channels --start 0 --end 20
+python scripts/viark_cli.py tune "News HD"           # direct tune by name
+python scripts/viark_cli.py key mute
+python scripts/viark_cli.py keys                  # key alias table
 
-python tools/verify_protocol.py                 # re-check protocol claims
-python tools/test_actions.py                    # self-verifying tune + mute
-python tools/map_keys_guided.py --start 24 --end 56 --out keymap.json
-python tools/raw_capture.py --json '{"request":"14"}'
-python tools/ha_import_check.py                 # import against a real HA install
-python tools/make_brand_images.py               # regenerate the brand icons
+python scripts/verify_protocol.py                 # re-check protocol claims
+python scripts/test_actions.py                    # self-verifying tune + mute
+python scripts/map_keys_guided.py --start 24 --end 56 --out keymap.json
+python scripts/raw_capture.py --json '{"request":"14"}'
+python scripts/ha_import_check.py                 # import against a real HA install
+python scripts/make_brand_images.py               # regenerate the brand icons
 ```
 
 ### Tests
@@ -311,18 +399,16 @@ icon, with no orphans left behind when one is removed.
 
 ## Contributing
 
-Key codes 25, 27, 28, 40, 41, 46–53, 56, 66–68 and 71–82 appear in only one of
-the two reverse-engineering sources and have not been pressed on real hardware,
-so they are deliberately not aliased. If you map any of them —
-`tools/map_keys_guided.py` helps — a PR adding them to `KEY_ALIASES` is welcome.
-Name them after the label on your remote rather than the one in
-[PROTOCOL.md](PROTOCOL.md): where the two have differed, the remote was right.
+Reports from receiver models other than the SAT 4K are the most useful thing
+you can send, and some remote key codes still need someone to press them on
+real hardware. See [CONTRIBUTING.md](CONTRIBUTING.md) for both, and for how to
+work on the code.
 
-Eight codes have already made that trip (24, 26, 44, 45, 54, 55, 69, 70) and are
-recorded in PROTOCOL.md with the behaviour observed.
+## Disclaimer
 
-Reports from other receiver models are especially useful: the login block
-reports a platform id, and behaviour is known to vary by platform.
+This is an unofficial, community project. It is not affiliated with or endorsed
+by Viark, the makers of G-MScreen, or any other brand mentioned here. All
+trademarks belong to their respective owners. Use at your own risk.
 
 ## Credits
 
@@ -339,9 +425,17 @@ reports a platform id, and behaviour is known to vary by platform.
 [remote-card]: https://github.com/jorgediez/ha-viark-remote-card
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg
 [hacs-url]: https://github.com/hacs/integration
+[release-badge]: https://img.shields.io/github/v/release/jorgediez/ha-viark
+[release-url]: https://github.com/jorgediez/ha-viark/releases
+[validate-badge]: https://github.com/jorgediez/ha-viark/actions/workflows/validate.yml/badge.svg
+[validate-url]: https://github.com/jorgediez/ha-viark/actions/workflows/validate.yml
 [tests-badge]: https://github.com/jorgediez/ha-viark/actions/workflows/tests.yml/badge.svg
 [tests-url]: https://github.com/jorgediez/ha-viark/actions/workflows/tests.yml
 [license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [brands]: https://github.com/home-assistant/brands
+[my-hacs-badge]: https://my.home-assistant.io/badges/hacs_repository.svg
+[my-hacs-url]: https://my.home-assistant.io/redirect/hacs_repository/?owner=jorgediez&repository=ha-viark&category=integration
+[my-setup-badge]: https://my.home-assistant.io/badges/config_flow_start.svg
+[my-setup-url]: https://my.home-assistant.io/redirect/config_flow_start/?domain=viark
 [gabonator]: https://gist.github.com/gabonator/2c8885127cf6e0954c24e5d698ff99b6
 [pcgmscreen]: https://github.com/adamlahbib/PC-GMScreen

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: The on-screen remote card
+    url: https://github.com/jorgediez/ha-viark-remote-card/issues
+    about: Issues with the dashboard card belong in its own repository.

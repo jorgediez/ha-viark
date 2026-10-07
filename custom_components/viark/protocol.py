@@ -2,7 +2,7 @@
 
 The wire format below is taken from two independent reverse-engineering efforts --
 the GMScreen Android app and the PC-GMScreen Java client -- and only details the
-two agree on are relied upon here. See PROTOCOL.md for the cross-check.
+two agree on are relied upon here. See docs/PROTOCOL.md for the cross-check.
 
 Summary:
 

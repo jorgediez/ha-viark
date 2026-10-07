@@ -7,7 +7,7 @@ menus have no machine-visible effect, so they need a human to look at the screen
 For each code it counts down, sends the key, then asks what happened. Answers are
 appended to a JSON file as you go, so the session can be stopped and resumed.
 
-    python tools/map_keys_guided.py --start 3 --end 40 --out keymap.json
+    python scripts/map_keys_guided.py --start 3 --end 40 --out keymap.json
 """
 
 from __future__ import annotations

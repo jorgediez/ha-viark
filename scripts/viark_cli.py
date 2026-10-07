@@ -1,13 +1,13 @@
 """Command-line harness for the Viark receiver.
 
 Usage:
-    python tools/viark_cli.py info
-    python tools/viark_cli.py now
-    python tools/viark_cli.py channels --start 45 --end 55
-    python tools/viark_cli.py tune "Sports 2 HD"
-    python tools/viark_cli.py key mute
-    python tools/viark_cli.py key 1 --watch --delay 10
-    python tools/viark_cli.py discover
+    python scripts/viark_cli.py info
+    python scripts/viark_cli.py now
+    python scripts/viark_cli.py channels --start 45 --end 55
+    python scripts/viark_cli.py tune "Sports 2 HD"
+    python scripts/viark_cli.py key mute
+    python scripts/viark_cli.py key 1 --watch --delay 10
+    python scripts/viark_cli.py discover
 """
 
 from __future__ import annotations

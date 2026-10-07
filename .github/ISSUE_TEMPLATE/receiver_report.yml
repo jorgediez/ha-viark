@@ -1,0 +1,41 @@
+name: Receiver report
+description: Tell us how the integration does with your receiver.
+labels: [compatibility]
+body:
+  - type: input
+    id: model
+    attributes:
+      label: Receiver brand and model
+      placeholder: Viark SAT 4K, GTMedia ..., Freesat ...
+    validations:
+      required: true
+  - type: input
+    id: platform_id
+    attributes:
+      label: Platform ID
+      description: Shown by the "Platform ID" diagnostic sensor.
+    validations:
+      required: true
+  - type: input
+    id: software_version
+    attributes:
+      label: Receiver software version
+      description: Shown by the "Software version" diagnostic sensor.
+  - type: dropdown
+    id: result
+    attributes:
+      label: Does it work?
+      options:
+        - Everything works
+        - Partially (details below)
+        - Not discovered / doesn't work
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: >-
+        What works and what doesn't (channel list, tuning, mute, power, keys ...).
+        Attaching the diagnostics helps: Settings → Devices & Services → Viark → ⋮ →
+        Download diagnostics.
