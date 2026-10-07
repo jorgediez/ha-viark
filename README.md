@@ -397,6 +397,14 @@ unless it has been confirmed on hardware, that `freeze` and `pause` never drift
 onto each other's code, and that every entity has both a translated name and an
 icon, with no orphans left behind when one is removed.
 
+### Releasing
+
+1. Bump `version` in `custom_components/viark/manifest.json` and in
+   `pyproject.toml`. A test checks they match.
+2. Publish a GitHub release tagged `vX.Y.Z`. HACS installs from that tag.
+3. The **Release** workflow checks the tag matches both files, then runs the
+   tests and the HACS and hassfest validation against the tagged code.
+
 ## Contributing
 
 Reports from receiver models other than the SAT 4K are the most useful thing
