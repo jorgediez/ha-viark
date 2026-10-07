@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Questions and ideas
+    url: https://community.home-assistant.io/t/custom-card-viark-remote-card-the-receivers-remote-on-your-dashboard/1025251
+    about: Ask in the Home Assistant community thread.
   - name: The receiver or the integration
     url: https://github.com/jorgediez/ha-viark/issues
     about: Connection problems, keys the integration doesn't know, and anything about the receiver itself.

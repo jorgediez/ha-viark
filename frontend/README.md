@@ -233,6 +233,8 @@ add it as a resource, as in [manual installation](#manual).
 Issues and pull requests are welcome. Problems with the receiver itself, or with
 keys the integration does not know yet, belong in the
 [integration's repository][integration]. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Questions and ideas are welcome in the
+[Home Assistant community thread][community].
 
 ## Disclaimer
 
@@ -246,6 +248,7 @@ bottom is plain text, not the Viark logo. Use at your own risk.
 [MIT](LICENSE)
 
 [integration]: https://github.com/jorgediez/ha-viark
+[community]: https://community.home-assistant.io/t/custom-card-viark-remote-card-the-receivers-remote-on-your-dashboard/1025251
 [card-mod]: https://github.com/thomasloven/lovelace-card-mod
 [map-keys]: https://github.com/jorgediez/ha-viark/blob/main/scripts/map_keys_guided.py
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg

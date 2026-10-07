@@ -16,6 +16,8 @@ Knowing which side a problem is on saves everyone time.
   errors**: these are the integration's, and belong in
   [its issues](https://github.com/jorgediez/ha-viark/issues). Its diagnostics
   download helps there.
+- **Questions and ideas**, or showing how you use the card: the
+  [community thread](https://community.home-assistant.io/t/custom-card-viark-remote-card-the-receivers-remote-on-your-dashboard/1025251).
 
 ## Adding a button's key
 
