@@ -1,24 +1,22 @@
 name: Release
 
+# Builds the card from the tagged code and attaches ha-viark-remote-card.js to
+# the release, which is the file HACS installs. The same checks as a pull
+# request run first, so a release that fails them gets no file attached.
 on:
   release:
     types: [published]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release:
-    name: Build and attach the card to the release
+  version:
+    name: Check the tag matches package.json
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-
-      - name: Check the tag matches package.json
+      - name: Compare the tag with package.json
         run: |
           tag="${GITHUB_REF_NAME#v}"
           version="$(node -p "require('./package.json').version")"
@@ -27,11 +25,30 @@ jobs:
             exit 1
           fi
 
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
+  tests:
+    name: Tests
+    needs: version
+    uses: ./.github/workflows/tests.yml
 
+  validate:
+    name: Validate
+    needs: version
+    uses: ./.github/workflows/validate.yml
+
+  release:
+    name: Build and attach the card to the release
+    needs: [tests, validate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
       - name: Upload ha-viark-remote-card.js
         env:
           GH_TOKEN: ${{ github.token }}
