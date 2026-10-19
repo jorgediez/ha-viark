@@ -1,0 +1,8 @@
+# Generated or not ours to format
+dist/
+coverage/
+node_modules/
+package-lock.json
+
+# Prose is wrapped by hand
+*.md
