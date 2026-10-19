@@ -3,3 +3,6 @@
 
 # Format with ruff
 7594ede23d66db05e5561e75d548a3a4d5acc4f6
+
+# Format the card with Prettier (imported from ha-viark-remote-card)
+13c38efcee2c2b4f47354650011ae24b7a9587cc

@@ -1,5 +1,5 @@
 name: Bug report
-description: Something doesn't work as expected.
+description: The integration or the receiver doesn't work as expected.
 labels: [bug]
 body:
   - type: textarea

@@ -94,9 +94,4 @@ describe("release metadata", () => {
     const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { version: string };
     expect(VERSION).toBe(pkg.version);
   });
-
-  it("points HACS at the built file", () => {
-    const hacs = JSON.parse(readFileSync("hacs.json", "utf8")) as { filename: string };
-    expect(hacs.filename).toBe("ha-viark-remote-card.js");
-  });
 });

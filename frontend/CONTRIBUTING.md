@@ -8,18 +8,18 @@ Knowing which side a problem is on saves everyone time.
 ## Reporting a problem
 
 - **The card itself** (layout, buttons, the editor, a button that sends the wrong
-  key): open an [issue here](https://github.com/jorgediez/ha-viark-remote-card/issues/new/choose).
+  key): open a [Card bug report](https://github.com/jorgediez/ha-viark/issues/new/choose).
   Include the card version (the browser console shows `VIARK-REMOTE-CARD vX.Y.Z`
   when the card loads), the integration version, your card YAML, and the browser
   or companion app.
 - **The receiver doesn't react, a key the integration doesn't know, connection
-  errors**: these are the integration's, and belong in
-  [its issues](https://github.com/jorgediez/ha-viark/issues). Its diagnostics
+  errors**: these are the integration's, and belong in a
+  [Bug report](https://github.com/jorgediez/ha-viark/issues/new/choose). Its diagnostics
   download helps there.
 - **Questions and ideas**, or showing how you use the card: the
   [community thread](https://community.home-assistant.io/t/custom-card-viark-remote-card-the-receivers-remote-on-your-dashboard/1025251).
 - **A security problem**: not in an issue or the thread. See
-  [SECURITY.md](SECURITY.md) for how to report it privately.
+  [SECURITY.md](../SECURITY.md) for how to report it privately.
 
 ## Adding a button's key
 
@@ -27,7 +27,7 @@ A button can only send a key the integration knows by name. When the integration
 adds one (to `KEY_ALIASES` in its `const.py`):
 
 1. Update `tests/integration-key-aliases.json`. `node scripts/check-key-aliases.mjs`
-   says what changed; it also runs weekly and before every release.
+   says what changed, and CI runs it on every pull request.
 2. Point the button at the new name in `src/buttons.ts`. If it was one of the
    unsupported buttons, update the list in `src/localize.ts` and the test that
    counts them.

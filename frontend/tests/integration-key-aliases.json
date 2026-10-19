@@ -1,6 +1,6 @@
 {
-  "source": "https://github.com/jorgediez/ha-viark/blob/main/custom_components/viark/const.py",
-  "note": "The key names ha-viark accepts (KEY_ALIASES). Every key the card sends must be one of these. scripts/check-key-aliases.mjs compares this copy with the integration; run it after an integration release changes the table.",
+  "source": "custom_components/viark/const.py",
+  "note": "The key names the integration accepts (KEY_ALIASES). Every key the card sends must be one of these. scripts/check-key-aliases.mjs compares this copy with const.py, and CI runs it on every pull request.",
   "keys": [
     "audio",
     "back",

@@ -1,13 +1,12 @@
-name: Bug report
-description: The card doesn't look or work as expected.
+name: Card bug report
+description: The remote card doesn't look or work as expected.
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: >-
         If the receiver doesn't react, or you see a connection or "unknown key" error
-        from the integration, please report it in the
-        [integration's repository](https://github.com/jorgediez/ha-viark/issues) instead.
+        from the integration, please use the Bug report form instead.
   - type: textarea
     id: what
     attributes:
