@@ -3,3 +3,6 @@
 
 *.png binary
 *.jpg binary
+
+# The card's build: collapsed in pull request diffs, left out of language stats.
+custom_components/viark/www/*.js linguist-generated=true

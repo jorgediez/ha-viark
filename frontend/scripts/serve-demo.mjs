@@ -3,7 +3,8 @@ import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize, resolve } from "node:path";
 
-const root = resolve(import.meta.dirname, "..");
+// The repository root: the demo loads the built card from the integration's folder.
+const root = resolve(import.meta.dirname, "../..");
 const port = Number(process.env.PORT ?? 5000);
 const types = {
   ".html": "text/html",
@@ -13,7 +14,7 @@ const types = {
 
 createServer((req, res) => {
   const path = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
-  const file = normalize(join(root, path === "/" ? "demo/index.html" : path));
+  const file = normalize(join(root, path === "/" ? "frontend/demo/index.html" : path));
   if (!file.startsWith(root) || !existsSync(file) || !statSync(file).isFile()) {
     res.writeHead(404).end("Not found");
     return;

@@ -1,10 +1,10 @@
 {
   "name": "ha-viark-remote-card",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "A Home Assistant Lovelace card that mimics the Viark satellite receiver remote control.",
   "private": true,
   "type": "module",
-  "main": "dist/ha-viark-remote-card.js",
+  "main": "../custom_components/viark/www/viark-remote-card.js",
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c --watch",

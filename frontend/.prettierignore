@@ -1,5 +1,4 @@
 # Generated or not ours to format
-dist/
 coverage/
 node_modules/
 package-lock.json
