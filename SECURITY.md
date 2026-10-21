@@ -9,7 +9,8 @@ community thread. Only the maintainer sees the report, and no email address is
 needed.
 
 Describe what you found, how to reproduce it, and which versions of the
-integration and Home Assistant you saw it on.
+integration and Home Assistant you saw it on. For the remote card, also say which
+browser or companion app.
 
 ## What counts
 
@@ -19,11 +20,18 @@ integration and Home Assistant you saw it on.
   what the integration's entities and actions offer.
 - A way to make the integration run code, or crash Home Assistant, from what a
   receiver sends.
+- A way to run script in the dashboard through the remote card, for example from
+  a card configuration or from what an entity reports.
+- The remote card sending an action the user didn't configure or press.
 
 Not a vulnerability in this integration: the receiver's own protocol has no
 authentication, so anything on the same network can control the box directly,
 with or without Home Assistant. That's how these receivers work, and nothing the
 integration does can change it. Keep the receiver on a network you trust.
+
+Also not a vulnerability: a card button override runs whatever action its
+configuration names. That's the feature, and only someone who can edit the
+dashboard can set it.
 
 ## Supported versions
 

@@ -55,3 +55,71 @@ jobs:
             pip install -r requirements_test.txt
           fi
       - run: pytest --cov --cov-report=term-missing
+
+  # The remote card, in frontend/. Its jobs are named "Card ..." so they never
+  # share a name with the integration's: the names are required checks.
+  card-lint:
+    name: Card lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+
+  card-test:
+    name: Card type check and test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run coverage
+
+  card-build:
+    name: Card build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ha-viark-remote-card
+          path: frontend/dist/ha-viark-remote-card.js
+
+  # The card sends keys by name, and the names are KEY_ALIASES in const.py. A
+  # change to either side has to update the card's copy in the same PR.
+  card-key-names:
+    name: Card key names
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: node frontend/scripts/check-key-aliases.mjs
