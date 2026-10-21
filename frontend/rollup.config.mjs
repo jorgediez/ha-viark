@@ -4,10 +4,12 @@ import typescript from "@rollup/plugin-typescript";
 
 const dev = process.env.ROLLUP_WATCH === "true";
 
+// The card ships inside the integration: Home Assistant serves this file, and
+// CI checks the committed copy matches a fresh build.
 export default {
   input: "src/viark-remote-card.ts",
   output: {
-    file: "dist/ha-viark-remote-card.js",
+    file: "../custom_components/viark/www/viark-remote-card.js",
     format: "es",
     sourcemap: dev,
     inlineDynamicImports: true,

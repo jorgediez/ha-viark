@@ -18,6 +18,9 @@ venv/
 .DS_Store
 Thumbs.db
 
+# Source maps from the card's watch build
+custom_components/viark/www/*.map
+
 # Local tooling state
 .claude/
 keymap.json

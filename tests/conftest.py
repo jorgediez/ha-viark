@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.viark.const import DOMAIN
+from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL, UrlManager
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -21,6 +22,21 @@ def auto_enable_custom_integrations(
 ) -> Generator[None]:
     """Let Home Assistant load the integration from custom_components/."""
     yield
+
+
+@pytest.fixture(autouse=True)
+def frontend(hass: HomeAssistant) -> MagicMock:
+    """Stand in for http and frontend, which the integration depends on for the card.
+
+    The real frontend needs the home-assistant-frontend package and a dozen other
+    integrations. Marking both as loaded keeps Home Assistant from setting them
+    up; the card still goes through the real add_extra_js_url.
+    """
+    hass.config.components.update({"http", "frontend"})
+    hass.http = MagicMock()
+    hass.http.async_register_static_paths = AsyncMock()
+    hass.data[DATA_EXTRA_MODULE_URL] = UrlManager(lambda *_: None, [])
+    return hass.http
 
 
 @pytest.fixture

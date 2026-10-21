@@ -3,6 +3,7 @@
   "name": "Viark Satellite Receiver",
   "codeowners": ["@jorgediez"],
   "config_flow": true,
+  "dependencies": ["frontend", "http"],
   "documentation": "https://github.com/jorgediez/ha-viark",
   "integration_type": "device",
   "iot_class": "local_push",

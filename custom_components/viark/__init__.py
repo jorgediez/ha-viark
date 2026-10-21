@@ -7,7 +7,10 @@ import logging
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
+from .card import async_register_card
 from .const import DOMAIN
 from .coordinator import ViarkConfigEntry, ViarkCoordinator
 from .protocol import ViarkClient, ViarkConnectionError
@@ -20,6 +23,14 @@ PLATFORMS: list[Platform] = [
     Platform.REMOTE,
     Platform.SENSOR,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Serve the remote card, once for every receiver."""
+    await async_register_card(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ViarkConfigEntry) -> bool:

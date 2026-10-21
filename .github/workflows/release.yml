@@ -1,8 +1,9 @@
 name: Release
 
 # HACS installs the integration straight from the release's tag, so there is
-# nothing to build. This checks the tag names the version the code declares,
-# then runs the same checks as a pull request against the tagged code.
+# nothing to build: the card's build is committed, and the Card build job fails
+# if it is stale. This checks the tag names the version the code declares, then
+# runs the same checks as a pull request against the tagged code.
 on:
   release:
     types: [published]
@@ -16,13 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Compare the tag with manifest.json and pyproject.toml
+      - name: Compare the tag with manifest.json, pyproject.toml and the card
         run: |
           tag="${GITHUB_REF_NAME#v}"
           manifest="$(python3 -c "import json; print(json.load(open('custom_components/viark/manifest.json'))['version'])")"
           project="$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")"
-          if [ "$tag" != "$manifest" ] || [ "$tag" != "$project" ]; then
-            echo "::error::Release tag $GITHUB_REF_NAME does not match manifest.json ($manifest) and pyproject.toml ($project)"
+          card="$(python3 -c "import json; print(json.load(open('frontend/package.json'))['version'])")"
+          if [ "$tag" != "$manifest" ] || [ "$tag" != "$project" ] || [ "$tag" != "$card" ]; then
+            echo "::error::Release tag $GITHUB_REF_NAME does not match manifest.json ($manifest), pyproject.toml ($project) and frontend/package.json ($card)"
             exit 1
           fi
 

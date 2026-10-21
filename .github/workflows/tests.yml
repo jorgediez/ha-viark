@@ -107,10 +107,14 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run build
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ha-viark-remote-card
-          path: frontend/dist/ha-viark-remote-card.js
+      # The integration ships the committed build; HACS installs nothing else.
+      - name: Check the committed card matches the build
+        run: |
+          if [ -n "$(git status --porcelain -- ../custom_components/viark/www)" ]; then
+            git status --short -- ../custom_components/viark/www
+            echo "::error::custom_components/viark/www is out of date. Run npm run build in frontend/ and commit the result."
+            exit 1
+          fi
 
   # The card sends keys by name, and the names are KEY_ALIASES in const.py. A
   # change to either side has to update the card's copy in the same PR.
