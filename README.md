@@ -19,8 +19,8 @@ Starsat and similar), though only the SAT 4K has been tested.
 > `enigma2` / OpenWebif integration does not work with them. That is why this
 > integration exists.
 
-For an on-screen remote to go with it, see the companion
-[**ha-viark-remote-card**][remote-card].
+It comes with an on-screen [**remote card**](#remote-card) for your dashboards, a
+button-for-button replica of the receiver's remote.
 
 ## Features
 
@@ -38,6 +38,7 @@ For an on-screen remote to go with it, see the companion
 | Any remote key, by name or raw code | request 1040 |
 | Push updates when the receiver changes, typically within a second | notifications 2001–2019 |
 | Diagnostic entities (identity, capabilities) | login block + request 15 |
+| [Remote card](#remote-card) for dashboards | ships with the integration, loaded automatically |
 
 ### Known limits
 
@@ -67,11 +68,13 @@ Or by hand:
 2. Add `https://github.com/jorgediez/ha-viark` as an **Integration**
 3. Install **Viark Satellite Receiver**, then restart Home Assistant
 
+The [remote card](#remote-card) comes with it; there is nothing else to install.
+
 ### Manual
 
 Copy `custom_components/viark/` into your Home Assistant
 `config/custom_components/` directory and restart. There are no external
-dependencies.
+dependencies. The remote card is in that folder too, in `www/`.
 
 ### Configuration
 
@@ -256,17 +259,172 @@ actions:
 Muting only sends the mute key when the receiver is not already muted, so the
 second automation cannot unmute by accident.
 
-## Companion dashboard card
+## Remote card
 
-[**ha-viark-remote-card**][remote-card] is a custom Lovelace card that draws an
-on-screen remote in the style of the receiver's physical one and drives it through
-this integration. If you would rather press buttons than write `send_key` calls,
-start there — installation and configuration are documented in that repository.
+The integration ships a dashboard card that looks and works like the receiver's
+remote control. Every button of the physical remote is on the card, in the same
+place.
 
-It is a separate project with its own release cycle; this integration does not
-require it, and the card needs this integration installed to have anything to
-talk to. The named keys listed above are what the card sends, so anything the
-card can do is also reachable from an automation.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jorgediez/ha-viark/main/images/remote-card.png" alt="The Viark remote card" width="320">
+</p>
+
+- Button-for-button replica of the original remote, scaled to any card width.
+- Works with either the integration's `media_player` or `remote` entity.
+- Status window with a power LED and the channel that is playing.
+- **Hold to repeat** on volume, channel and arrow buttons, paced to what the
+  receiver accepts. Scrolling the dashboard over the card never presses a key.
+- Visual editor, card picker preview and sections view sizing.
+- Every button can be remapped to a raw key code or any Home Assistant action.
+- Haptic feedback in the companion app, keyboard navigation and screen reader
+  labels.
+- English and Spanish.
+
+The integration loads the card into every dashboard, storage or YAML, as soon as
+a receiver is set up. There is no dashboard resource to add. After an update,
+reload the browser to get the new card. It does not load on Google Cast displays,
+which only load dashboard resources.
+
+### Adding the card
+
+Add it from the dashboard editor (**Add card → Viark Remote Card**), or in YAML:
+
+```yaml
+type: custom:viark-remote-card
+entity: media_player.viark_sat_4k
+```
+
+| Option        | Type    | Default          | Description |
+|---------------|---------|------------------|-------------|
+| `entity`      | string  | **required**     | The Viark `media_player` or `remote` entity. |
+| `name`        | string  | `VIARK`          | Text printed at the bottom of the remote. |
+| `show_name`   | boolean | `true`           | Show the name at the bottom. |
+| `show_status` | boolean | `true`           | Show power state and current channel in the top window. |
+| `haptics`     | boolean | `true`           | Vibrate on press in the companion app. |
+| `buttons`     | map     |                  | Per-button overrides, see [below](#button-overrides). |
+
+Either entity type sends the same keys:
+
+| `entity` domain | Keys are sent with     | Power uses            |
+|-----------------|------------------------|-----------------------|
+| `media_player`  | `viark.send_key`       | `media_player.toggle` |
+| `remote`        | `remote.send_command`  | `remote.toggle`       |
+
+When bound to the `remote` entity, the card finds the `media_player` of the same
+device to show the channel.
+
+The card is 280 px wide at most. To change that, set `--viark-remote-width`, for
+example with [card-mod][card-mod]:
+
+```yaml
+card_mod:
+  style: |
+    :host { --viark-remote-width: 340px; }
+```
+
+### Buttons
+
+Each button sends one of the [named keys](#actions), so anything the card does
+can also be done from an automation. Power uses the integration's dedicated power
+command, so it only wakes the receiver from soft standby. That is a limit of the
+receiver.
+
+| Button | Button name | Action |
+|---|---|---|
+| ⏻ | `power` | toggle power |
+| 🔇 | `mute` | `mute` |
+| RESOL | `resol` | `resolution` |
+| TXT | `txt` | `teletext` |
+| AUDIO | `audio` | `audio` |
+| SUBT | `subt` | `subtitle` |
+| 0 – 9 | `digit_0` … `digit_9` | `digit_0` … `digit_9` |
+| < | `chevron_left` | — *not supported yet* |
+| > | `chevron_right` | — *not supported yet* |
+| VOL + / VOL − | `vol_up` / `vol_down` | `volume_up` / `volume_down` (hold to repeat) |
+| CH + / CH − | `ch_up` / `ch_down` | `channel_up` / `channel_down`, the receiver's own channel keys (hold to repeat) |
+| FAV | `fav` | `favourite` |
+| EPG | `epg` | `epg` |
+| INFO | `info` | `info` |
+| MENU | `menu` | `menu` |
+| RECALL | `recall` | `recall` |
+| EXIT | `exit` | `exit` |
+| ▲ ▼ ◀ ▶ | `up` `down` `left` `right` | `up` `down` `left` `right` (hold to repeat) |
+| OK | `ok` | `ok` |
+| Red / Green / Yellow / Blue | `red` `green` `yellow` `blue` | `red` `green` `yellow` `blue` |
+| F1 / F2 | `f1` / `f2` | `f1` / `f2` |
+| MEDIA | `media` | `usb` |
+| UPDATE | `update` | — *not supported yet* |
+| ⏪ ▶ ⏸ ⏩ | `rewind` `play` `pause` `fast_forward` | `rewind` `play` `pause` `fast_forward` |
+| TIMER | `timer` | `timer` |
+| ⏺ / ⏹ | `record` / `stop` | `record` / `stop` |
+| TV/R | `tv_radio` | `tv_radio` |
+
+Buttons marked *not supported yet* have no verified key code. Pressing one shows
+a short notice and sends nothing. Until a code is confirmed on real hardware (see
+[Mapping remote keys](CONTRIBUTING.md#mapping-remote-keys)), use an override.
+
+### Button overrides
+
+The `buttons` option remaps any button by its name from the table above. Each
+override needs exactly one of these:
+
+| Field | Effect |
+|---|---|
+| `key` | Send a different key: a name (`epg`) or a raw key code (`44`). |
+| `perform_action` | Run any Home Assistant action. `data` and `target` are optional. |
+| `action: none` | Disable the button. |
+
+```yaml
+type: custom:viark-remote-card
+entity: media_player.viark_sat_4k
+name: Living room
+buttons:
+  # A raw key code the integration has no name for
+  chevron_left:
+    key: 25
+  # Any action
+  update:
+    perform_action: script.turn_on
+    target:
+      entity_id: script.receiver_night_mode
+  # Tune straight to a channel
+  f2:
+    perform_action: media_player.select_source
+    target:
+      entity_id: media_player.viark_sat_4k
+    data:
+      source: News HD
+  # Ignore the button
+  timer:
+    action: none
+```
+
+[`scripts/map_keys_guided.py`](scripts/map_keys_guided.py) steps through the
+unverified key codes on a live receiver and helps find the right number for each
+button.
+
+### Coming from the separate card
+
+The card used to be its own project, [ha-viark-remote-card][old-card], installed
+as a HACS dashboard repository. It ships with the integration from version 1.4.0.
+Your cards keep working as they are: the card type (`custom:viark-remote-card`)
+and every option are the same.
+
+Remove the old copy, or the dashboard may keep loading it instead of the new one:
+
+1. Update this integration to 1.4.0 or newer and restart Home Assistant.
+2. **Installed through HACS:** open HACS, find **Viark Remote Card**, and choose
+   **⋮ → Remove**. HACS deletes its dashboard resource too. Then remove
+   `https://github.com/jorgediez/ha-viark-remote-card` from **HACS → ⋮ → Custom
+   repositories**.
+3. **Installed by hand:** delete the `/local/ha-viark-remote-card.js` entry under
+   **Settings → Dashboards → ⋮ → Resources**, and the file from `config/www/`.
+4. Reload the browser. In the companion app, use **Reset frontend cache**, under
+   **Settings → Companion app**, in Debugging on iOS or Troubleshooting on
+   Android.
+
+The browser console shows `VIARK-REMOTE-CARD v1.4.0` (or newer) once the new card
+is in use.
 
 ## Troubleshooting
 
@@ -285,6 +443,19 @@ card can do is also reachable from an automation.
   menu, or wait for the recording.
 * **The address changed.** Use **⋮ → Reconfigure** on the integration (see
   [Configuration](#configuration)).
+* **"Custom element doesn't exist: viark-remote-card".** The card loads once a
+  receiver is set up and Home Assistant has restarted with the integration
+  installed. If both are true, reload the browser or clear the companion app's
+  frontend cache.
+* **The remote card behaves like an older version.** An old copy of the separate
+  card is still loaded; see
+  [Coming from the separate card](#coming-from-the-separate-card). The browser
+  console shows `VIARK-REMOTE-CARD vX.Y.Z` when the card loads, and it should
+  match the integration's version.
+* **The card's buttons are greyed out.** The entity is `unavailable`: the
+  integration cannot reach the receiver (see above).
+* **The card's arrow keys move a menu instead of changing channel.** That is how
+  the receiver behaves while a menu is open on the TV.
 
 When reporting a problem, attach the integration's diagnostics: *Settings →
 Devices & Services → Viark → ⋮ → Download diagnostics*. The receiver's address,
@@ -299,11 +470,12 @@ logger:
 
 ## Removal
 
-1. *Settings → Devices & Services → Viark*, then **⋮ → Delete** on each
+1. Remove the remote card from your dashboards.
+2. *Settings → Devices & Services → Viark*, then **⋮ → Delete** on each
    receiver.
-2. If you installed through HACS, remove **Viark Satellite Receiver** there;
+3. If you installed through HACS, remove **Viark Satellite Receiver** there;
    otherwise delete `config/custom_components/viark/`.
-3. Restart Home Assistant.
+4. Restart Home Assistant. The card goes with the integration.
 
 Nothing is left on the receiver: it keeps no record of Home Assistant beyond
 the open connection.
@@ -373,6 +545,30 @@ python scripts/ha_import_check.py                 # import against a real HA ins
 python scripts/make_brand_images.py               # regenerate the brand icons
 ```
 
+### The remote card
+
+Its source is in `frontend/`, in TypeScript with Lit. The build is committed to
+`custom_components/viark/www/viark-remote-card.js`, because HACS installs that
+folder from the release's tag and builds nothing.
+
+```bash
+cd frontend
+npm install
+npm run build       # writes custom_components/viark/www/viark-remote-card.js
+npm run watch       # rebuild on change
+npm run typecheck
+npm run lint        # ESLint
+npm run format      # Prettier; format:check only reports
+npm test
+npm run coverage    # tests with a coverage report
+npm run demo        # http://localhost:5000, with a mocked Home Assistant
+node scripts/check-key-aliases.mjs   # the card's key names match const.py
+```
+
+Commit the rebuilt file with every change to the card. CI rebuilds it and fails
+when the committed file differs, so a Dependabot update that changes the build
+needs a rebuild pushed to its branch.
+
 ### Tests
 
 ```bash
@@ -397,13 +593,20 @@ unless it has been confirmed on hardware, that `freeze` and `pause` never drift
 onto each other's code, and that every entity has both a translated name and an
 icon, with no orphans left behind when one is removed.
 
+The card has its own tests in `frontend/`, run with `npm test`: pure logic in
+Node, and the card and its editor rendered in happy-dom against a mocked `hass`.
+
 ### Releasing
 
-1. Bump `version` in `custom_components/viark/manifest.json` and in
-   `pyproject.toml`. A test checks they match.
+1. Bump the version in `custom_components/viark/manifest.json` and
+   `pyproject.toml`, and the card's: `npm version X.Y.Z --no-git-tag-version` in
+   `frontend/`, and `VERSION` in `frontend/src/const.ts`. Rebuild the card and
+   commit it. Tests check they all match.
 2. Publish a GitHub release tagged `vX.Y.Z`. HACS installs from that tag.
-3. The **Release** workflow checks the tag matches both files, then runs the
-   tests and the HACS and hassfest validation against the tagged code.
+3. The **Release** workflow checks the tag matches the version files, then runs
+   the tests, the card's checks and the HACS and hassfest validation against the
+   tagged code. Releases are immutable: if a check fails, fix it and release a
+   new version.
 
 ## Contributing
 
@@ -417,7 +620,9 @@ the [Home Assistant community thread][community].
 
 This is an unofficial, community project. It is not affiliated with or endorsed
 by Viark, the makers of G-MScreen, or any other brand mentioned here. All
-trademarks belong to their respective owners. Use at your own risk.
+trademarks belong to their respective owners. The remote card imitates the
+remote's button layout; the name at the bottom is plain text, not the Viark logo.
+Use at your own risk.
 
 ## Credits
 
@@ -431,7 +636,8 @@ trademarks belong to their respective owners. Use at your own risk.
 
 [MIT](LICENSE)
 
-[remote-card]: https://github.com/jorgediez/ha-viark-remote-card
+[old-card]: https://github.com/jorgediez/ha-viark-remote-card
+[card-mod]: https://github.com/thomasloven/lovelace-card-mod
 [community]: https://community.home-assistant.io/t/viark-satellite-receivers-and-other-g-mscreen-boxes-local-control-integration/1025250
 [hacs-badge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg
 [hacs-url]: https://github.com/hacs/integration

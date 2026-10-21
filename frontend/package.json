@@ -48,12 +48,13 @@
     "typescript-eslint": "^8.71.2",
     "vitest": "^5.0.3"
   },
-  "homepage": "https://github.com/jorgediez/ha-viark-remote-card#readme",
+  "homepage": "https://github.com/jorgediez/ha-viark#remote-card",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jorgediez/ha-viark-remote-card.git"
+    "url": "git+https://github.com/jorgediez/ha-viark.git",
+    "directory": "frontend"
   },
   "bugs": {
-    "url": "https://github.com/jorgediez/ha-viark-remote-card/issues"
+    "url": "https://github.com/jorgediez/ha-viark/issues"
   }
 }
