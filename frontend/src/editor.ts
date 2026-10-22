@@ -3,6 +3,7 @@ import { property, state } from "lit/decorators.js";
 
 import { DEFAULTS, EDITOR_TYPE, VIARK_DOMAIN } from "./const";
 import { localize } from "./localize";
+import { defineWhenReady } from "./register";
 import type { HomeAssistant, ViarkRemoteCardConfig } from "./types";
 
 interface SchemaItem {
@@ -129,6 +130,4 @@ export class ViarkRemoteCardEditor extends LitElement {
   }
 }
 
-if (!customElements.get(EDITOR_TYPE)) {
-  customElements.define(EDITOR_TYPE, ViarkRemoteCardEditor);
-}
+defineWhenReady(EDITOR_TYPE, ViarkRemoteCardEditor);

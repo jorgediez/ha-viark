@@ -443,10 +443,12 @@ is in use.
   menu, or wait for the recording.
 * **The address changed.** Use **⋮ → Reconfigure** on the integration (see
   [Configuration](#configuration)).
-* **"Custom element doesn't exist: viark-remote-card".** The card loads once a
-  receiver is set up and Home Assistant has restarted with the integration
-  installed. If both are true, reload the browser or clear the companion app's
-  frontend cache.
+* **The card shows "Configuration error" or "Custom element doesn't exist:
+  viark-remote-card".** The card loads once a receiver is set up and Home
+  Assistant has restarted with the integration installed. A dashboard opened
+  while Home Assistant is still starting misses the card until it is reloaded,
+  so reload it once startup has finished. If it persists, clear the browser's
+  cache, or the companion app's frontend cache.
 * **The remote card behaves like an older version.** An old copy of the separate
   card is still loaded; see
   [Coming from the separate card](#coming-from-the-separate-card). The browser
