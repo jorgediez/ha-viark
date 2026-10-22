@@ -26,6 +26,7 @@ import {
   type PowerState,
 } from "./entities";
 import { localize } from "./localize";
+import { defineWhenReady } from "./register";
 import { styles } from "./styles";
 import type { HassEntity, HomeAssistant, ViarkRemoteCardConfig } from "./types";
 import "./editor";
@@ -377,9 +378,7 @@ export class ViarkRemoteCard extends LitElement {
   }
 }
 
-if (!customElements.get(CARD_TYPE)) {
-  customElements.define(CARD_TYPE, ViarkRemoteCard);
-
+defineWhenReady(CARD_TYPE, ViarkRemoteCard, () => {
   window.customCards = window.customCards ?? [];
   window.customCards.push({
     type: CARD_TYPE,
@@ -394,4 +393,4 @@ if (!customElements.get(CARD_TYPE)) {
     "color: #fff; background: #1e1f22; font-weight: 700;",
     "color: #1e1f22; background: #c5d3e1; font-weight: 700;",
   );
-}
+});
