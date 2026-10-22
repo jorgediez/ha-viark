@@ -15,16 +15,13 @@ body:
     validations:
       required: true
   - type: input
-    id: card_version
-    attributes:
-      label: Card version
-      description: The browser console shows `VIARK-REMOTE-CARD vX.Y.Z` when the card loads.
-    validations:
-      required: true
-  - type: input
     id: integration_version
     attributes:
       label: Integration version
+      description: >-
+        The card ships with the integration. The browser console shows
+        `VIARK-REMOTE-CARD vX.Y.Z` when the card loads; if that differs from the
+        integration's version, an old copy of the card is still loaded.
     validations:
       required: true
   - type: input

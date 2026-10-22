@@ -386,7 +386,7 @@ if (!customElements.get(CARD_TYPE)) {
     name: localize(navigator.language, "card.name"),
     description: localize(navigator.language, "card.description"),
     preview: true,
-    documentationURL: "https://github.com/jorgediez/ha-viark-remote-card",
+    documentationURL: "https://github.com/jorgediez/ha-viark#remote-card",
   });
 
   console.info(
