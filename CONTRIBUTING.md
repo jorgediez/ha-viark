@@ -91,7 +91,8 @@ python3.13 -m venv .venv
 ```
 
 The Home Assistant test harness only runs on Linux and macOS. On Windows, use
-WSL. The scripts in `scripts/` talk to a receiver directly, without Home
+Docker (`scripts/test-docker.sh`, which runs the same two Home Assistant
+versions as CI) or WSL. The scripts in `scripts/` talk to a receiver directly, without Home
 Assistant; the [README](README.md#development) lists them.
 
 The remote card is in `frontend/`, and needs Node 24:
