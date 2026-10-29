@@ -579,7 +579,9 @@ ruff check . && ruff format --check .
 pytest
 ```
 
-The Home Assistant test harness only runs on Linux and macOS. On Windows, use WSL.
+The Home Assistant test harness only runs on Linux and macOS. On Windows, use
+Docker (`scripts/test-docker.sh`, which runs the same two Home Assistant
+versions as CI) or WSL.
 
 No hardware required. The integration is exercised inside Home Assistant against
 a mocked receiver: the config flow (discovery, a receiver that moved address,
@@ -606,9 +608,10 @@ Node, and the card and its editor rendered in happy-dom against a mocked `hass`.
    commit it. Tests check they all match.
 2. Publish a GitHub release tagged `vX.Y.Z`. HACS installs from that tag.
 3. The **Release** workflow checks the tag matches the version files, then runs
-   the tests, the card's checks and the HACS and hassfest validation against the
-   tagged code. Releases are immutable: if a check fails, fix it and release a
-   new version.
+   the tests, the card's checks and hassfest against the tagged code, and the
+   HACS validation, which checks the repository through GitHub's API rather than
+   the tag. Releases are immutable: if a check fails, fix it and release a new
+   version.
 
 ## Contributing
 
