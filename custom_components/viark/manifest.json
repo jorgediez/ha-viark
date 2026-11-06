@@ -1,6 +1,7 @@
 {
   "domain": "viark",
   "name": "Viark Satellite Receiver",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@jorgediez"],
   "config_flow": true,
   "dependencies": ["frontend", "http"],
