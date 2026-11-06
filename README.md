@@ -1,6 +1,6 @@
 # Viark Satellite Receiver — Home Assistant integration
 
-[![hacs][hacs-badge]][hacs-url]
+[![marketplace][marketplace-badge]][marketplace-url]
 [![release][release-badge]][release-url]
 [![validate][validate-badge]][validate-url]
 [![tests][tests-badge]][tests-url]
@@ -58,15 +58,18 @@ Requires **Home Assistant 2025.3 or newer** — that release added
 `AddConfigEntryEntitiesCallback`, which the platforms are typed against. There are
 no external Python dependencies.
 
-### HACS (custom repository)
+### Marketplace (recommended)
 
-[![Open your Home Assistant instance and open this repository in HACS.][my-hacs-badge]][my-hacs-url]
+[![Open your Home Assistant instance and open a repository inside the Marketplace.][my-marketplace-badge]][my-marketplace-url]
 
-Or by hand:
+1. In Home Assistant, go to *Settings → Marketplace*, search for **Viark
+   Satellite Receiver** and open it, or use the button above.
+2. Select **Install**. The setup opens once it's installed; if a restart is
+   needed, Home Assistant offers one.
 
-1. HACS → Integrations → ⋮ → **Custom repositories**
-2. Add `https://github.com/jorgediez/ha-viark` as an **Integration**
-3. Install **Viark Satellite Receiver**, then restart Home Assistant
+On Home Assistant releases before 2026.11, use HACS instead: search for **Viark
+Satellite Receiver**, select **Download**, then restart Home Assistant. The
+button above opens it there too.
 
 The [remote card](#remote-card) comes with it; there is nothing else to install.
 
@@ -413,10 +416,16 @@ and every option are the same.
 Remove the old copy, or the dashboard may keep loading it instead of the new one:
 
 1. Update this integration to 1.4.0 or newer and restart Home Assistant.
-2. **Installed through HACS:** open HACS, find **Viark Remote Card**, and choose
-   **⋮ → Remove**. HACS deletes its dashboard resource too. Then remove
-   `https://github.com/jorgediez/ha-viark-remote-card` from **HACS → ⋮ → Custom
-   repositories**.
+2. **Installed from the Marketplace** (Home Assistant 2026.11 or newer, which
+   moves HACS installs there): open **Viark Remote Card** in *Settings →
+   Marketplace* and select **⋮ → Uninstall**. That deletes its dashboard
+   resource too. If `jorgediez/ha-viark-remote-card` is still listed under
+   **Add from link → Added from links**, remove it there.
+
+   **Installed through HACS** (older releases): open HACS, find **Viark Remote
+   Card**, and choose **⋮ → Remove**. HACS deletes its dashboard resource too.
+   Then remove `https://github.com/jorgediez/ha-viark-remote-card` from
+   **HACS → ⋮ → Custom repositories**.
 3. **Installed by hand:** delete the `/local/ha-viark-remote-card.js` entry under
    **Settings → Dashboards → ⋮ → Resources**, and the file from `config/www/`.
 4. Reload the browser. In the companion app, use **Reset frontend cache**, under
@@ -475,8 +484,9 @@ logger:
 1. Remove the remote card from your dashboards.
 2. *Settings → Devices & Services → Viark*, then **⋮ → Delete** on each
    receiver.
-3. If you installed through HACS, remove **Viark Satellite Receiver** there;
-   otherwise delete `config/custom_components/viark/`.
+3. If you installed it from the Marketplace, open **Viark Satellite Receiver**
+   there and select **⋮ → Uninstall**. With HACS, remove it there. Otherwise
+   delete `config/custom_components/viark/`.
 4. Restart Home Assistant. The card goes with the integration.
 
 Nothing is left on the receiver: it keeps no record of Home Assistant beyond
@@ -550,8 +560,8 @@ python scripts/make_brand_images.py               # regenerate the brand icons
 ### The remote card
 
 Its source is in `frontend/`, in TypeScript with Lit. The build is committed to
-`custom_components/viark/www/viark-remote-card.js`, because HACS installs that
-folder from the release's tag and builds nothing.
+`custom_components/viark/www/viark-remote-card.js`, because the Marketplace and
+HACS install that folder from the release's tag and build nothing.
 
 ```bash
 cd frontend
@@ -606,7 +616,8 @@ Node, and the card and its editor rendered in happy-dom against a mocked `hass`.
    `pyproject.toml`, and the card's: `npm version X.Y.Z --no-git-tag-version` in
    `frontend/`, and `VERSION` in `frontend/src/const.ts`. Rebuild the card and
    commit it. Tests check they all match.
-2. Publish a GitHub release tagged `vX.Y.Z`. HACS installs from that tag.
+2. Publish a GitHub release tagged `vX.Y.Z`. The Marketplace and HACS install
+   from that tag.
 3. The **Release** workflow checks the tag matches the version files, then runs
    the tests, the card's checks and hassfest against the tagged code, and the
    HACS validation, which checks the repository through GitHub's API rather than
@@ -644,8 +655,8 @@ Use at your own risk.
 [old-card]: https://github.com/jorgediez/ha-viark-remote-card
 [card-mod]: https://github.com/thomasloven/lovelace-card-mod
 [community]: https://community.home-assistant.io/t/viark-satellite-receivers-and-other-g-mscreen-boxes-local-control-integration/1025250
-[hacs-badge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg
-[hacs-url]: https://github.com/hacs/integration
+[marketplace-badge]: https://img.shields.io/badge/Marketplace-Default-41BDF5.svg?logo=homeassistant&logoColor=white
+[marketplace-url]: https://www.home-assistant.io/integrations/marketplace/
 [release-badge]: https://img.shields.io/github/v/release/jorgediez/ha-viark
 [release-url]: https://github.com/jorgediez/ha-viark/releases
 [validate-badge]: https://github.com/jorgediez/ha-viark/actions/workflows/validate.yml/badge.svg
@@ -654,8 +665,8 @@ Use at your own risk.
 [tests-url]: https://github.com/jorgediez/ha-viark/actions/workflows/tests.yml
 [license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [brands]: https://github.com/home-assistant/brands
-[my-hacs-badge]: https://my.home-assistant.io/badges/hacs_repository.svg
-[my-hacs-url]: https://my.home-assistant.io/redirect/hacs_repository/?owner=jorgediez&repository=ha-viark&category=integration
+[my-marketplace-badge]: https://my.home-assistant.io/badges/marketplace_repository.svg
+[my-marketplace-url]: https://my.home-assistant.io/redirect/marketplace_repository/?owner=jorgediez&repository=ha-viark&category=integration
 [my-setup-badge]: https://my.home-assistant.io/badges/config_flow_start.svg
 [my-setup-url]: https://my.home-assistant.io/redirect/config_flow_start/?domain=viark
 [gabonator]: https://gist.github.com/gabonator/2c8885127cf6e0954c24e5d698ff99b6
