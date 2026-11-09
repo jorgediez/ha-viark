@@ -7,7 +7,6 @@ Home Assistant ends up with: states, and which entities a fresh install enables.
 from __future__ import annotations
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.viark.const import DOMAIN
 from homeassistant.const import STATE_ON, EntityCategory, Platform
@@ -15,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import SERIAL
+from .harness import MockConfigEntry
 
 
 def entity_id(hass: HomeAssistant, entry: MockConfigEntry, platform: str, key: str):

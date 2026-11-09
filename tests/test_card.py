@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from custom_components.viark.card import CARD_PATH, CARD_URL
 from custom_components.viark.const import DOMAIN
 from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL
@@ -14,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import HOST, PORT
+from .harness import MockConfigEntry
 
 MANIFEST = json.loads((CARD_PATH.parents[1] / "manifest.json").read_text("utf-8"))
 

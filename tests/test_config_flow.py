@@ -6,7 +6,6 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 import voluptuous as vol
 
 from custom_components.viark.const import DOMAIN
@@ -21,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from .common import HOST, PORT, PRODUCT_NAME, SERIAL, make_client
+from .harness import MockConfigEntry
 
 
 @pytest.fixture
