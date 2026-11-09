@@ -5,13 +5,12 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from custom_components.viark.diagnostics import async_get_config_entry_diagnostics
 from custom_components.viark.protocol import ViarkConnectionError
 from homeassistant.core import HomeAssistant
 
 from .common import CHANNELS, HOST, SERIAL, make_state
+from .harness import MockConfigEntry
 
 
 async def test_diagnostics_describe_the_receiver(

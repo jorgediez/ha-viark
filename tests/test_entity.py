@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from .harness import MockConfigEntry
 
 
 async def test_every_entity_is_named_after_the_receiver(

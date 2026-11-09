@@ -6,7 +6,6 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.viark.const import DOMAIN
 from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL, UrlManager
@@ -14,6 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .common import HOST, PORT, PRODUCT_NAME, SERIAL, make_client
+from .harness import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

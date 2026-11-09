@@ -12,12 +12,13 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.viark.const import DOMAIN, REFRESH_COOLDOWN_SECONDS
 from custom_components.viark.coordinator import MAX_FETCH_PASSES, ViarkCoordinator
 from custom_components.viark.protocol import ViarkError
 from homeassistant.core import HomeAssistant
+
+from .harness import MockConfigEntry
 
 #: Home Assistant's own default, which left channel changes up to 10 s behind.
 HA_DEFAULT_COOLDOWN = 10

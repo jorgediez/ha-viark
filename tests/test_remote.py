@@ -7,7 +7,6 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.viark import remote
 from custom_components.viark.const import DOMAIN, KEY_DIGIT_BASE, KEY_MUTE
@@ -31,6 +30,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .common import make_state
+from .harness import MockConfigEntry
 
 
 @pytest.fixture

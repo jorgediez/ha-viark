@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from custom_components.viark.protocol import ViarkConnectionError, ViarkRequestError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .common import HOST, PORT
+from .harness import MockConfigEntry
 
 
 async def test_setup_and_unload(
